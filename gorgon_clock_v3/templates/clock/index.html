@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gorgon Clock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #0a0806;
+      --panel-bg:      #100d08;
+      --panel-bg-deep: #0c0a06;
+      --maroon:        #5c1a10;
+      --maroon-mid:    #7a2215;
+      --maroon-bright: #9b2d1a;
+      --amber:         #c8780a;
+      --amber-bright:  #e08c14;
+      --amber-dim:     #7a4808;
+      --body-text:     #d8cfc0;
+      --body-dim:      #bead92;
+      --body-faint:    #3a3228;
+      --event-amber:   #d4920a;
+      --event-red:     #c0392b;
+      --green:         #4a7a2a;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--body-text);
+      font-family: 'Spectral', Georgia, serif;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.3rem;
+      padding: 2rem 2rem 3rem;
+      min-height: 100vh;
+      justify-content: flex-start;
+    }
+
+    /* ── Header ── */
+    header { text-align: center; margin-top: 1rem; }
+
+    .title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--amber-bright);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 30px rgba(200,120,10,0.25);
+    }
+
+    .header-rule {
+      width: 100%;
+      max-width: 1100px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--maroon-mid), transparent);
+      margin-top: 0.7rem;
+      position: relative;
+    }
+    .header-rule::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 5px; height: 5px;
+      background: var(--maroon-bright);
+    }
+
+    /* ── Shared panel ── */
+    .panel, .schedule-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--body-faint);
+      border-top: 2px solid var(--maroon-mid);
+    }
+
+    .panel-label, .section-label {
+      font-family: 'Spectral', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--body-dim);
+    }
+
+    /* ── Clock grid ── */
+    .clock-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .panel { padding: 1rem 1.5rem 1.1rem; }
+    .panel-label { margin-bottom: 0.35rem; }
+    .col-span-2 { grid-column: 1 / -1; text-align: center; }
+
+    .panel-value {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.3rem, 3.2vw, 2rem);
+      font-weight: 400;
+      color: var(--body-text);
+      letter-spacing: 0.05em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .col-span-2 .panel-value {
+      font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+      color: var(--amber-bright);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 20px rgba(200,120,10,0.2);
+    }
+
+    /* event-panel CSS removed */
+
+    /* ── Full Schedule Panel ── */
+    .schedule-panel {
+      width: 100%;
+      max-width: 1100px;
+      padding: 1.2rem 2rem 1.6rem;
+    }
+
+    .schedule-panel-header {
+      margin-bottom: 0;
+      padding-bottom: 0.5rem;
+    }
+
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .schedule-table thead tr {
+      border-bottom: 1px solid var(--body-faint);
+    }
+
+    .schedule-table th {
+      font-family: 'Spectral', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--body-dim);
+      font-weight: 400;
+      padding: 0 0.7rem 0.7rem;
+      text-align: left;
+    }
+    .schedule-table th:first-child { padding-left: 0; width: 96px; }
+    .schedule-table th.col-gorgon  { width: 120px; }
+    .schedule-table th.col-est     { width: 130px; }
+    .schedule-table th.col-freq      { width: 180px; }
+    .schedule-table th.col-countdown { width: 110px; }
+
+    .schedule-table tbody tr {
+      border-bottom: 1px solid rgba(58,50,40,0.35);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .schedule-table tbody tr:last-child { border-bottom: none; }
+    .schedule-table tbody tr:hover { background: rgba(90,60,16,0.1); }
+
+    .schedule-table td {
+      padding: 0.7rem 0.7rem;
+      vertical-align: middle;
+    }
+    .schedule-table td:first-child { padding-left: 0; }
+
+    /* Category badge */
+    .cat-badge {
+      display: inline-block;
+      font-family: 'Spectral', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border: 1px solid;
+      border-radius: 2px;
+    }
+    .cat-daily   { color: var(--event-amber); border-color: var(--amber-dim); }
+    .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
+
+    .td-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: #e8e0d0;
+    }
+
+    .td-gorgon {
+      font-family: 'Cinzel', serif;
+      font-size: 0.92rem;
+      color: var(--amber);
+    }
+
+    .td-est {
+      font-family: 'Cinzel', serif;
+      font-size: 0.92rem;
+      color: var(--body-text);
+    }
+
+    .td-freq {
+      font-family: 'Spectral', serif;
+      font-size: 0.88rem;
+      font-style: italic;
+      color: var(--body-dim);
+    }
+
+    /* ── Countdown column ── */
+    .td-countdown {
+      font-family: 'Cinzel', serif;
+      font-size: 0.92rem;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .td-countdown.happening {
+      color: var(--event-red);
+      text-shadow: 0 0 8px rgba(192,57,43,0.4);
+      animation: pulse-red 3s ease-in-out infinite;
+    }
+    .td-countdown.soon   { color: var(--event-amber); }
+    .td-countdown.normal { color: var(--body-text); }
+
+    /* Bell pair — warning + now toggles side by side */
+    .bell-pair {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+    .bell-wrap {
+      position: relative;
+    }
+    /* tiny W / N label under each bell */
+    .bell-tag {
+      display: block;
+      font-family: 'Spectral', serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+      text-align: center;
+      color: var(--body-dim);
+      margin-top: 1px;
+      line-height: 1;
+    }
+    .bell-wrap.on .bell-tag { color: var(--body-text); }
+
+    /* Bell toggle in table */
+    .bell-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 3px;
+      transition: background 0.15s;
+    }
+    .bell-wrap:hover { background: rgba(90,60,16,0.25); }
+    .bell-wrap svg { display: block; }
+
+    /* ── Chime test button area ── */
+    .chime-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--body-faint);
+    }
+
+    .chime-label {
+      font-family: 'Spectral', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--body-dim);
+      margin-right: 0.3rem;
+    }
+
+    .chime-btn {
+      font-family: 'Spectral', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      background: var(--panel-bg-deep);
+      border: 1px solid var(--maroon-mid);
+      color: var(--body-text);
+      padding: 0.45rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      min-width: 7rem;
+      text-align: center;
+    }
+    .chime-btn:hover { border-color: var(--amber); color: var(--amber); background: rgba(90,60,16,0.2); }
+    .chime-btn:active { background: rgba(90,60,16,0.4); }
+
+    /* ── Filter dropdown ── */
+    .filter-wrap {
+      position: relative;
+    }
+
+    .filter-btn {
+      font-family: 'Spectral', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      background: var(--panel-bg-deep);
+      border: 1px solid var(--maroon-mid);
+      color: var(--body-text);
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--maroon-bright);
+      color: #fff;
+      font-size: 0.6rem;
+      font-family: 'Cinzel', serif;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      line-height: 1;
+    }
+    .filter-badge.hidden-badge { display: none; }
+
+    .filter-arrow {
+      font-size: 0.6rem;
+      transition: transform 0.2s;
+      color: var(--body-dim);
+    }
+    .filter-btn.open .filter-arrow { transform: rotate(180deg); }
+
+    .filter-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 240px;
+      background: var(--panel-bg);
+      border: 1px solid var(--maroon-mid);
+      border-top: 2px solid var(--maroon-mid);
+      z-index: 50;
+      padding: 0.6rem 0;
+    }
+    .filter-panel.open { display: block; }
+
+    .filter-group-label {
+      font-family: 'Spectral', serif;
+      font-size: 0.56rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--body-dim);
+      padding: 0.5rem 1rem 0.3rem;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.35rem 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .filter-row:hover { background: rgba(90,60,16,0.15); }
+
+    .filter-check {
+      width: 13px; height: 13px;
+      border: 1px solid var(--maroon-mid);
+      background: var(--panel-bg-deep);
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .filter-check.checked {
+      background: var(--maroon-mid);
+      border-color: var(--maroon-bright);
+    }
+    .filter-check.checked::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.6rem;
+      line-height: 1;
+    }
+
+    .filter-name {
+      font-family: 'Spectral', serif;
+      font-size: 0.82rem;
+      color: var(--body-text);
+    }
+
+    .filter-divider {
+      height: 1px;
+      background: var(--body-faint);
+      margin: 0.4rem 0;
+    }
+
+    .filter-all-row {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.4rem 1rem 0.2rem;
+    }
+    .filter-all-btn {
+      font-family: 'Spectral', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      background: none;
+      border: 1px solid var(--body-faint);
+      color: var(--body-dim);
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .filter-all-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+
+    /* ── Section divider ── */
+    .section-rule {
+      width: 100%;
+      max-width: 1100px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--maroon), transparent);
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      top: 1rem; right: 1rem;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+    .toast {
+      background: #1a1008;
+      border: 1px solid var(--maroon-mid);
+      border-left: 3px solid var(--amber-bright);
+      padding: 0.7rem 1rem;
+      max-width: 280px;
+      animation: toast-in 0.3s ease, toast-out 0.4s ease 4.6s forwards;
+    }
+    .toast.urgent { border-left-color: var(--event-red); }
+    .toast-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      color: var(--amber-bright);
+      margin-bottom: 0.2rem;
+    }
+    .toast.urgent .toast-title { color: var(--event-red); }
+    .toast-body {
+      font-family: 'Spectral', serif;
+      font-size: 0.8rem;
+      color: var(--body-text);
+    }
+
+    .footer {
+      font-family: 'Spectral', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--body-faint);
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Animations ── */
+    @keyframes toast-in  { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes toast-out { from { opacity:1; } to { opacity:0; } }
+
+    @keyframes pulse-amber {
+      0%,100% { text-shadow: 0 0 8px  rgba(212,146,10,0.25); }
+      50%      { text-shadow: 0 0 18px rgba(212,146,10,0.6), 0 0 35px rgba(200,120,10,0.2); }
+    }
+    @keyframes pulse-red {
+      0%,100% { text-shadow: 0 0 8px  rgba(192,57,43,0.25); }
+      50%      { text-shadow: 0 0 18px rgba(192,57,43,0.6), 0 0 35px rgba(139,26,26,0.2); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="shell">
+
+  <header><div class="title">Gorgon Clock</div></header>
+
+  <div class="header-rule"></div>
+
+  <!-- ── Clocks ── -->
+  <div class="clock-grid">
+    <div class="panel">
+      <div class="panel-label">Local Time</div>
+      <div class="panel-value" id="local-time">--:--:-- --</div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Server Time (EST)</div>
+      <div class="panel-value" id="est-time">{{ est_time }}</div>
+    </div>
+    <div class="panel col-span-2">
+      <div class="panel-label">Gorgon Time</div>
+      <div class="panel-value" id="gorgon-time">{{ gorgon_time }}</div>
+    </div>
+  </div>
+
+
+  <div class="section-rule"></div>
+
+  <!-- ── Full Event Schedule ── -->
+  <div class="schedule-panel">
+    <div class="schedule-panel-header">
+      <div class="section-label">Event Schedule &amp; Chime Alerts</div>
+      <div class="chime-row">
+      <span class="chime-label">Test chimes:</span>
+      <button class="chime-btn" onclick="playChime('warning15')">&#9658; Warning (15m)</button>
+      <button class="chime-btn" onclick="playChime('warning10')">&#9658; Warning (10m)</button>
+      <button class="chime-btn" onclick="playChime('warning')">&#9658; Warning (5m)</button>
+      <button class="chime-btn" onclick="playChime('now')">&#9658; Now!</button>
+    </div>
+    </div>
+
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th><span style="font-size:0.5rem;letter-spacing:0.08em;color:var(--body-dim)">15m&nbsp;10m&nbsp;5m&nbsp;Now</span></th>
+          <th>Event</th>
+          <th class="col-gorgon">Gorgon Time</th>
+          <th class="col-est">EST Time</th>
+          <th class="col-freq">Recurrence</th>
+          <th class="col-countdown">Time Until</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-tbody">
+        <!-- rows injected by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">Strekios Chronicle &mdash; syncing every second</div>
+
+</div><!-- .shell -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// EVENT REGISTRY
+// ───────────────────────────────────────────────────────────────
+// To ADD an event:  push a new object into EVENTS below.
+// To REMOVE one:   delete or comment out its object.
+//
+// Fields:
+//   id          — unique string key (used for alert deduplication & storage)
+//   name        — displayed in the schedule table
+//   category    — 'daily' | 'special'
+//   gorgonTime  — what the in-game clock shows when it fires  (display only)
+//   estDisplay  — human-readable EST time shown in table      (display only)
+//   freq        — recurrence description shown in table       (display only)
+//
+//   estMatch    — object used by the alert engine:
+//     { minute, hour? }         repeating (every even/odd hour)
+//     { minute, hour, day? }    fixed daily or weekly (day 0=Sun…6=Sat)
+//
+//   evenHoursOnly — true  → only fires when EST hour is even
+//                   false/omitted → fires every matching hour
+//
+//   warningOffset — minutes before estMatch to play the warning chime
+//                   (default 5 if omitted)
+// ═══════════════════════════════════════════════════════════════
+
+const EVENTS = [
+
+  // ── Daily / bi-daily ────────────────────────────────────────
+  {
+    id:           'elt-blood',
+    name:         'Elt Blood Event',
+    category:     'daily',
+    gorgonTime:   '1:00 AM',
+    estDisplay:   ':05 (even hrs)',
+    freq:         'Every even hour + 5 min',
+    estMatch:     { minute: 5 },
+    evenHoursOnly: true,
+    enabled:      true,   // set false to hide from schedule
+  },
+  {
+    id:           'sv-blood',
+    name:         'SV Blood Event',
+    category:     'daily',
+    gorgonTime:   '3:00 AM',
+    estDisplay:   ':15 (even hrs)',
+    freq:         'Every even hour + 15 min',
+    estMatch:     { minute: 15 },
+    evenHoursOnly: true,
+    enabled:      true,
+  },
+  {
+    id:           'egg-run',
+    name:         'Egg Run',
+    category:     'daily',
+    gorgonTime:   '6:00 PM',           // approximate — egg run is real-time based
+    estDisplay:   '6:00 PM',
+    freq:         'Daily',
+    estMatch:     { hour: 18, minute: 0 },
+    evenHoursOnly: false,
+    enabled:      true,
+  },
+
+  // ── Weekly / special ────────────────────────────────────────
+  {
+    id:           'poetry-jam',
+    name:         'Poetry Jam',
+    category:     'special',
+    gorgonTime:   '—',                 // real-time event, no Gorgon hour
+    estDisplay:   'Sat 2:00 PM',
+    freq:         'Every Saturday',
+    estMatch:     { day: 6, hour: 14, minute: 0 },
+    evenHoursOnly: false,
+    enabled:      true,
+  },
+
+];
+
+// ═══════════════════════════════════════════════════════════════
+// WEB AUDIO — MEDIEVAL CHIMES
+// Two tones synthesized entirely in the browser; no audio files.
+//   warning  — soft single bell (heads-up)
+//   now      — rich double strike (event is live)
+// ═══════════════════════════════════════════════════════════════
+
+let _audioCtx = null;
+function ctx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function strike(ac, freq, startTime, duration, gain) {
+  const osc  = ac.createOscillator();
+  const env  = ac.createGain();
+  const comp = ac.createDynamicsCompressor();
+
+  // Add a detuned overtone for a bell-like timbre
+  const osc2 = ac.createOscillator();
+  const env2 = ac.createGain();
+
+  osc.type  = 'sine';  osc.frequency.value  = freq;
+  osc2.type = 'sine';  osc2.frequency.value = freq * 2.756; // inharmonic partial
+
+  env.gain.setValueAtTime(0, startTime);
+  env.gain.linearRampToValueAtTime(gain, startTime + 0.008);
+  env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+  env2.gain.setValueAtTime(0, startTime);
+  env2.gain.linearRampToValueAtTime(gain * 0.3, startTime + 0.008);
+  env2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+
+  osc.connect(env);   env.connect(comp);
+  osc2.connect(env2); env2.connect(comp);
+  comp.connect(ac.destination);
+
+  osc.start(startTime);  osc.stop(startTime + duration);
+  osc2.start(startTime); osc2.stop(startTime + duration * 0.6);
+}
+
+function playChime(type) {
+  const ac = ctx();
+  const t  = ac.currentTime + 0.05;
+
+  if (type === 'warning') {
+    // Single soft bell at G5 — 5 min heads-up
+    strike(ac, 784, t, 2.2, 0.18);
+  } else if (type === 'warning10') {
+    // Two soft bells at E5 — 10 min heads-up (slightly lower/calmer)
+    strike(ac, 659, t,       2.0, 0.15);
+    strike(ac, 659, t + 0.4, 1.8, 0.12);
+  } else if (type === 'warning15') {
+    // Single low bell at C5 — 15 min heads-up (earliest, most subtle)
+    strike(ac, 523, t, 2.5, 0.13);
+  } else {
+    // Two strikes at C5 and G5 — richer "now!" signal
+    strike(ac, 523, t,       3.0, 0.22);
+    strike(ac, 784, t + 0.5, 2.5, 0.18);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUBSCRIPTION STATE  — persisted to localStorage
+// ═══════════════════════════════════════════════════════════════
+
+function loadSubs() {
+  try { return JSON.parse(localStorage.getItem('gorgon_subs') || '{}'); }
+  catch { return {}; }
+}
+function saveSubs(s) { localStorage.setItem('gorgon_subs', JSON.stringify(s)); }
+
+let subs = loadSubs();
+function isSubbed(key) { return !!subs[key]; }
+
+function toggleSub(key, event) {
+  // Stop the row's onclick from firing when clicking a specific bell
+  if (event) event.stopPropagation();
+  subs[key] ? delete subs[key] : (subs[key] = true);
+  saveSubs(subs);
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HIDDEN EVENTS STATE — persisted to localStorage
+// An event's id is in this set when it should be hidden from the table.
+// ═══════════════════════════════════════════════════════════════
+
+function loadHidden() {
+  try { return new Set(JSON.parse(localStorage.getItem('gorgon_hidden') || '[]')); }
+  catch { return new Set(); }
+}
+function saveHidden() {
+  localStorage.setItem('gorgon_hidden', JSON.stringify([...hidden]));
+}
+
+// Seed from EVENTS — respects the enabled field on first load
+let hidden = (function() {
+  const stored = localStorage.getItem('gorgon_hidden');
+  if (stored !== null) return loadHidden();          // use saved prefs
+  const h = new Set();
+  EVENTS.forEach(ev => { if (ev.enabled === false) h.add(ev.id); });
+  return h;
+})();
+
+function isVisible(ev) { return !hidden.has(ev.id); }
+
+function toggleHidden(id, e) {
+  if (e) e.stopPropagation();
+  hidden.has(id) ? hidden.delete(id) : hidden.add(id);
+  saveHidden();
+  renderTable();
+  renderFilterList();
+  updateFilterBadge();
+}
+
+function setAllVisible(show, e) {
+  if (e) e.stopPropagation();
+  if (show) hidden.clear();
+  else EVENTS.forEach(ev => hidden.add(ev.id));
+  saveHidden();
+  renderTable();
+  renderFilterList();
+  updateFilterBadge();
+}
+
+// ── Filter panel open/close ──────────────────────────────
+function toggleFilterPanel(e) {
+  if (e) e.stopPropagation();
+  const btn   = document.getElementById('filter-btn');
+  const panel = document.getElementById('filter-panel');
+  btn.classList.toggle('open');
+  panel.classList.toggle('open');
+}
+
+// Close filter panel when clicking outside
+document.addEventListener('click', () => {
+  document.getElementById('filter-btn')?.classList.remove('open');
+  document.getElementById('filter-panel')?.classList.remove('open');
+});
+
+function updateFilterBadge() {
+  const badge = document.getElementById('filter-badge');
+  if (!badge) return;   // filter UI is optional; skip if not in DOM
+  const n = hidden.size;
+  badge.textContent = n;
+  badge.classList.toggle('hidden-badge', n === 0);
+}
+
+function renderFilterList() {
+  const container = document.getElementById('filter-list');
+  if (!container) return;
+
+  // Group by category
+  const categories = [...new Set(EVENTS.map(ev => ev.category))];
+  container.innerHTML = categories.map(cat => {
+    const evs = EVENTS.filter(ev => ev.category === cat);
+    const rows = evs.map(ev => {
+      const on = isVisible(ev);
+      return `<div class="filter-row" onclick="toggleHidden('${ev.id}', event)">
+        <div class="filter-check ${on ? 'checked' : ''}"></div>
+        <span class="filter-name">${ev.name}</span>
+      </div>`;
+    }).join('');
+    return `<div class="filter-group-label">${cat}</div>${rows}`;
+  }).join('<div class="filter-divider"></div>');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BELL SVG
+// ═══════════════════════════════════════════════════════════════
+
+function bellSVG(on, size=14) {
+  const fill = on ? '#4a7a2a' : '#3a3228';
+  const stroke = on ? '#4a7a2a' : '#7a7060';
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+    <path fill="${fill}" stroke="${stroke}" stroke-width="0.5"
+      d="M12 2a7 7 0 0 0-7 7v4.17l-1.7 1.7A1 1 0 0 0 4 16h16
+         a1 1 0 0 0 .7-1.71L19 12.83V9a7 7 0 0 0-7-7z
+         m0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z"/>
+  </svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER SCHEDULE TABLE
+// ═══════════════════════════════════════════════════════════════
+
+function renderTable() {
+  const tbody = document.getElementById('schedule-tbody');
+  tbody.innerHTML = EVENTS.filter(isVisible).map(ev => {
+    const w5on  = isSubbed(ev.id + ':warn5');
+    const w10on = isSubbed(ev.id + ':warn10');
+    const w15on = isSubbed(ev.id + ':warn15');
+    const nowOn = isSubbed(ev.id + ':now');
+    const badge = `<span class="cat-badge cat-${ev.category}">${ev.category}</span>`;
+    const bell = (key, label, on, title) => `
+      <div class="bell-wrap ${on ? 'on' : ''}"
+           onclick="toggleSub('${key}', event)"
+           title="${title}">
+        ${bellSVG(on, 15)}
+        <span class="bell-tag">${label}</span>
+      </div>`;
+    return `<tr>
+      <td>
+        <div class="bell-pair">
+          ${bell(ev.id+':warn15','15m',w15on, w15on?'Disable 15-min chime':'Enable 15-min chime')}
+          ${bell(ev.id+':warn10','10m',w10on, w10on?'Disable 10-min chime':'Enable 10-min chime')}
+          ${bell(ev.id+':warn5', '5m', w5on,  w5on? 'Disable 5-min chime' :'Enable 5-min chime')}
+          ${bell(ev.id+':now',   'Now',nowOn,  nowOn?'Disable now chime'  :'Enable now chime')}
+        </div>
+      </td>
+      <td><div class="td-name">${ev.name} ${badge}</div></td>
+      <td class="td-gorgon">${ev.gorgonTime}</td>
+      <td class="td-est">${ev.estDisplay}</td>
+      <td class="td-freq">${ev.freq}</td>
+      <td class="td-countdown normal" id="cd-${ev.id}">--:--</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERT ENGINE
+// Checks every second; fires each chime at most once per minute.
+// ═══════════════════════════════════════════════════════════════
+
+const fired = new Set();
+
+function minuteKey(id, suffix, d) {
+  return `${id}:${suffix}:${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
+}
+
+function matchesEST(ev, estNow) {
+  const m = ev.estMatch;
+  if (m.day  !== undefined && estNow.getDay()    !== m.day)    return false;
+  if (m.hour !== undefined && estNow.getHours()  !== m.hour)   return false;
+  if (estNow.getMinutes() !== m.minute) return false;
+  if (ev.evenHoursOnly && estNow.getHours() % 2 !== 0)        return false;
+  return true;
+}
+
+function warningMatchesEST(ev, estNow) {
+  // Build a date shifted forward by warningOffset minutes and check if THAT matches
+  const offset = (ev.warningOffset !== undefined) ? ev.warningOffset : 5;
+  const shifted = new Date(estNow.getTime() + offset * 60 * 1000);
+  return matchesEST(ev, shifted);
+}
+
+function checkAlerts(estNow) {
+  for (const ev of EVENTS.filter(isVisible)) {
+    // Warning chimes — each offset subscribed independently
+    const warnings = [
+      { key: ':warn5',  offset: 5,  chime: 'warning',   label: '~5 minutes'  },
+      { key: ':warn10', offset: 10, chime: 'warning10',  label: '~10 minutes' },
+      { key: ':warn15', offset: 15, chime: 'warning15',  label: '~15 minutes' },
+    ];
+    for (const w of warnings) {
+      if (isSubbed(ev.id + w.key)) {
+        const shifted = new Date(estNow.getTime() + w.offset * 60 * 1000);
+        if (matchesEST(ev, shifted)) {
+          const key = minuteKey(ev.id, w.key, estNow);
+          if (!fired.has(key)) {
+            fired.add(key);
+            playChime(w.chime);
+            showToast('Coming Soon', `${ev.name} in ${w.label}`, false);
+          }
+        }
+      }
+    }
+
+    // Now chime — subscribed independently via ev.id + ':now'
+    if (isSubbed(ev.id + ':now') && matchesEST(ev, estNow)) {
+      const key = minuteKey(ev.id, 'now', estNow);
+      if (!fired.has(key)) {
+        fired.add(key);
+        playChime('now');
+        showToast('Event Now!', `${ev.name} is happening!`, true);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+
+function showToast(title, body, urgent) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (urgent ? ' urgent' : '');
+  t.innerHTML = `<div class="toast-title">${title}</div><div class="toast-body">${body}</div>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 5000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIME HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function getEST() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+}
+
+function localTimeStr() {
+  return new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+  });
+}
+
+function estTimeStr() {
+  // Compute EST display string browser-side so it's always in sync with
+  // local time — no server round-trip needed, no 1-second lag.
+  const est = getEST();
+  const h   = est.getHours();
+  const hh  = String(h % 12 || 12).padStart(2, '0');
+  const mm  = String(est.getMinutes()).padStart(2, '0');
+  const ss  = String(est.getSeconds()).padStart(2, '0');
+  const ampm = h < 12 ? 'AM' : 'PM';
+  return `${hh}:${mm}:${ss} ${ampm} EST`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN TICK
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// COUNTDOWN LOGIC
+// Returns the next Date (in EST wall-clock space) when ev fires.
+// ═══════════════════════════════════════════════════════════════
+
+function nextOccurrenceEST(ev, estNow) {
+  const m = ev.estMatch;
+
+  // Fixed daily event (specific hour + minute, optional day-of-week)
+  if (m.hour !== undefined && !ev.evenHoursOnly) {
+    const candidate = new Date(estNow);
+    candidate.setHours(m.hour, m.minute, 0, 0);
+    if (m.day !== undefined) {
+      // weekly — advance to correct day
+      const daysAhead = (m.day - estNow.getDay() + 7) % 7;
+      candidate.setDate(candidate.getDate() + daysAhead);
+      if (candidate <= estNow) candidate.setDate(candidate.getDate() + 7);
+    } else {
+      // daily — if already passed today, advance to tomorrow
+      if (candidate <= estNow) candidate.setDate(candidate.getDate() + 1);
+    }
+    return candidate;
+  }
+
+  // Bi-hourly (evenHoursOnly) — fire at :minute of next even hour
+  if (ev.evenHoursOnly) {
+    const candidate = new Date(estNow);
+    const nowHour = estNow.getHours();
+    // find next even hour at or after now
+    let targetHour = nowHour % 2 === 0 ? nowHour : nowHour + 1;
+    candidate.setHours(targetHour, m.minute, 0, 0);
+    if (candidate <= estNow) {
+      candidate.setHours(targetHour + 2, m.minute, 0, 0);
+    }
+    return candidate;
+  }
+
+  return null;
+}
+
+function fmtCountdown(ms) {
+  if (ms <= 0) return 'Now!';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const min = Math.floor((totalSec % 3600) / 60);
+  const sec = totalSec % 60;
+  if (h > 0) return `${h}h ${String(min).padStart(2,'0')}m`;
+  return `${String(min).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
+}
+
+function updateCountdowns(estNow) {
+  for (const ev of EVENTS.filter(isVisible)) {
+    const el = document.getElementById('cd-' + ev.id);
+    if (!el) continue;
+    const next = nextOccurrenceEST(ev, estNow);
+    if (!next) { el.textContent = '—'; el.className = 'td-countdown normal'; continue; }
+    const ms = next - estNow;
+    el.textContent = fmtCountdown(ms);
+    if (ms <= 0 || ms < 60000) {
+      el.className = 'td-countdown happening';
+    } else if (ms < 6 * 60 * 1000) {
+      el.className = 'td-countdown soon';
+    } else {
+      el.className = 'td-countdown normal';
+    }
+  }
+}
+
+async function tick() {
+  const estNow = getEST();
+  document.getElementById('local-time').textContent = localTimeStr();
+  document.getElementById('est-time').textContent   = estTimeStr();
+  checkAlerts(estNow);
+
+  try {
+    const res  = await fetch('/api/time/');
+    const data = await res.json();
+
+    document.getElementById('gorgon-time').textContent = data.gorgon_time;
+
+
+  } catch (err) {
+    console.warn('Chronicle sync failed:', err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+renderTable();
+renderFilterList();
+updateFilterBadge();
+
+// Server fetch — every second for clock display and alert checking
+setInterval(tick, 1000);
+tick();
+
+// Countdown — runs on its own interval driven purely by the browser clock,
+// so the table updates smoothly even if the server fetch is slow.
+function tickCountdowns() { updateCountdowns(getEST()); }
+setInterval(tickCountdowns, 1000);
+tickCountdowns();
+</script>
+</body>
+</html>

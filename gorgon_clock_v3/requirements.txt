@@ -1,0 +1,2 @@
+django>=4.2,<5.0
+tzdata>=2024.1   # required on Windows for zoneinfo; harmless on Linux/macOS
