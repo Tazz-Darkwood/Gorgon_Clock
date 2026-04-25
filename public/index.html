@@ -868,10 +868,21 @@ const EVENTS = [
     name:         'Egg Run',
     category:     'daily',
     gorgonTime:   '-',           // approximate — egg run is real-time based
-    estDisplay:   '6:30 PM',
+    estDisplay:   '6:35 PM',
     freq:         'Daily',
-    estMatch:     { hour: 18, minute: 30 },
+    estMatch:     { hour: 18, minute: 35 },
     evenHoursOnly: false,
+    enabled:      true,
+  },
+  {
+    id:           'after-run',
+    name:         'Egg Run Rewards',
+    category:     'daily',
+    gorgonTime:   '-',           // approximate — egg run is real-time based
+    estDisplay:   '7:45 PM',
+    freq:         'Daily',
+    estMatch:     { hour: 19, minute: 45 },
+    oddHoursOnly: false,
     enabled:      true,
   },
 
