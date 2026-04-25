@@ -206,6 +206,84 @@
     }
     .cat-daily   { color: var(--event-amber); border-color: var(--amber-dim); }
     .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
+    .cat-temp    { color: #6db3a8;            border-color: #3a6058; }
+
+    /* ── Delete button for temp event rows ── */
+    .temp-delete {
+      display: inline-block;
+      margin-left: 0.5rem;
+      width: 1.3rem;
+      height: 1.3rem;
+      line-height: 1.1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      font-family: 'Spectral', serif;
+      color: var(--body-faint);
+      border: 1px solid var(--body-faint);
+      background: transparent;
+      cursor: pointer;
+      vertical-align: middle;
+      transition: color 0.15s, border-color 0.15s;
+      padding: 0;
+    }
+    .temp-delete:hover {
+      color: var(--event-red);
+      border-color: var(--event-red);
+    }
+
+    /* ── Quick-add bar for temporary events ── */
+    .quickadd {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--body-faint);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .quickadd-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--body-faint);
+      text-transform: uppercase;
+    }
+    .quickadd-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+    .quickadd-input {
+      flex: 1;
+      font-family: 'Spectral', serif;
+      font-size: 0.85rem;
+      background: var(--panel-bg-deep);
+      border: 1px solid var(--body-faint);
+      color: var(--body-text);
+      padding: 0.5rem 0.7rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .quickadd-input:focus { border-color: var(--maroon-mid); }
+    .quickadd-input::placeholder { color: var(--body-faint); font-style: italic; }
+    .quickadd-btn {
+      font-family: 'Spectral', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      background: var(--panel-bg-deep);
+      border: 1px solid var(--maroon-mid);
+      color: var(--body-text);
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .quickadd-btn:hover { border-color: var(--amber-bright); color: var(--amber-bright); }
+    .quickadd-hint {
+      font-family: 'Spectral', serif;
+      font-size: 0.7rem;
+      color: var(--body-faint);
+      font-style: italic;
+    }
+    .quickadd-hint.error { color: var(--event-red); font-style: normal; }
 
     .td-name {
       font-family: 'Cinzel', serif;
@@ -637,6 +715,18 @@
         <!-- rows injected by JS -->
       </tbody>
     </table>
+
+    <div class="quickadd">
+      <div class="quickadd-label">Quick Add &mdash; Temporary Event</div>
+      <div class="quickadd-row">
+        <input type="text" id="quickadd-input" class="quickadd-input"
+               placeholder="e.g.  XX:35 druid event" autocomplete="off" />
+        <button class="quickadd-btn" id="quickadd-btn">Add</button>
+      </div>
+      <div class="quickadd-hint" id="quickadd-hint">
+        Format: <strong>XX:MM event name</strong> &mdash; fires at the next :MM minute, then auto-removes 5 minutes later.
+      </div>
+    </div>
   </div>
 
   <div class="footer">Fan Made Chronicle &mdash; syncing every second</div>
@@ -647,30 +737,93 @@
 // ═══════════════════════════════════════════════════════════════
 // EVENT REGISTRY
 // ───────────────────────────────────────────────────────────────
-// To ADD an event:  push a new object into EVENTS below.
-// To REMOVE one:   delete or comment out its object.
+// To ADD an event:    push a new object into EVENTS below.
+// To REMOVE one:      delete or comment out its object.
+// To DISABLE one:     set enabled: false (keeps it in code but hides it).
 //
 // SECURITY NOTE: name, category, id, and display fields are inserted
-// directly into innerHTML. Keep them as plain text with no HTML or
-// quotes — they are developer-controlled constants, not user input.
+// directly into innerHTML. Keep them as plain text — no HTML, no quotes.
+// These are author-controlled constants, not user input.
 //
-// Fields:
-//   id          — unique string key (used for alert deduplication & storage)
-//   name        — displayed in the schedule table
-//   category    — 'daily' | 'special'
-//   gorgonTime  — what the in-game clock shows when it fires  (display only)
-//   estDisplay  — human-readable EST time shown in table      (display only)
-//   freq        — recurrence description shown in table       (display only)
+// ── REQUIRED FIELDS ────────────────────────────────────────────
+//   id            unique string (used for alert dedup + saved settings)
+//   name          shown in the schedule table
+//   category      'daily' | 'special'  (controls badge color)
+//   gorgonTime    in-game clock display (e.g. '1:00 AM' or '—')
+//   estDisplay    EST time hint shown in the table
+//   freq          recurrence description shown in the table
+//   estMatch      WHEN the event fires — see patterns below
+//   enabled       true normally; false to hide without deleting
 //
-//   estMatch    — object used by the alert engine:
-//     { minute, hour? }         repeating (every even/odd hour)
-//     { minute, hour, day? }    fixed daily or weekly (day 0=Sun…6=Sat)
+// ── OPTIONAL FIELDS ────────────────────────────────────────────
+//   evenHoursOnly true → only fires on even EST hours
+//   oddHoursOnly  true → only fires on odd EST hours
+//   warningOffset minutes before fire-time for the warning chime (default 5)
 //
-//   evenHoursOnly — true  → only fires when EST hour is even
-//                   false/omitted → fires every matching hour
+// ── estMatch PATTERNS ──────────────────────────────────────────
+//   Months are 0-indexed: Jan=0, Feb=1, … Dec=11
+//   Days of week: Sun=0, Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6
 //
-//   warningOffset — minutes before estMatch to play the warning chime
-//                   (default 5 if omitted)
+//   {minute}                              every hour at :MM
+//                                         (combine w/ evenHoursOnly or oddHoursOnly)
+//   {minute, hour}                        daily at HH:MM
+//   {minute, hour, day}                   weekly at HH:MM on day-of-week
+//   {minute, hour, date}                  monthly on the Nth of the month
+//   {minute, hour, month, date}           yearly on Month/Date
+//   {minute, hour, year, month, date}     ONE-TIME at a specific calendar moment
+//                                         (auto-hides after the moment passes)
+//
+// ── COPY-PASTE TEMPLATES ───────────────────────────────────────
+//
+//   // Bi-hourly on odd hours at :40
+//   {
+//     id:'my-id', name:'My Event', category:'daily',
+//     gorgonTime:'8:00 PM', estDisplay:'XX:40 (odd hrs)',
+//     freq:'Every odd hour', estMatch:{minute:40},
+//     oddHoursOnly:true, enabled:true,
+//   },
+//
+//   // Daily at 9:30 PM EST
+//   {
+//     id:'evening-raid', name:'Evening Raid', category:'daily',
+//     gorgonTime:'—', estDisplay:'9:30 PM',
+//     freq:'Daily', estMatch:{hour:21, minute:30},
+//     enabled:true,
+//   },
+//
+//   // Weekly — Wednesday at 8:00 PM EST
+//   {
+//     id:'wed-tournament', name:'Wednesday Tournament', category:'special',
+//     gorgonTime:'—', estDisplay:'Wed 8:00 PM',
+//     freq:'Every Wednesday', estMatch:{day:3, hour:20, minute:0},
+//     enabled:true,
+//   },
+//
+//   // Monthly — 1st of every month at midnight
+//   {
+//     id:'monthly-reset', name:'Monthly Reset', category:'special',
+//     gorgonTime:'—', estDisplay:'1st of month, 12:00 AM',
+//     freq:'Monthly', estMatch:{date:1, hour:0, minute:0},
+//     enabled:true,
+//   },
+//
+//   // Annual — every March 15th at 6:00 PM EST
+//   {
+//     id:'spring-festival', name:'Spring Festival', category:'special',
+//     gorgonTime:'—', estDisplay:'Mar 15, 6:00 PM',
+//     freq:'Annual', estMatch:{month:2, date:15, hour:18, minute:0},
+//     enabled:true,
+//   },
+//
+//   // One-time future event — Dec 1, 2026 at 8:00 PM EST.
+//   // Auto-hides itself the day after; safe to leave in the array.
+//   {
+//     id:'expansion-launch', name:'Expansion Launch', category:'special',
+//     gorgonTime:'—', estDisplay:'Dec 1, 2026 — 8:00 PM',
+//     freq:'One-time', estMatch:{year:2026, month:11, date:1, hour:20, minute:0},
+//     enabled:true,
+//   },
+//
 // ═══════════════════════════════════════════════════════════════
 
 const EVENTS = [
@@ -706,7 +859,7 @@ const EVENTS = [
     estDisplay:   'XX:40 (odd hrs)',
     freq:         'Every two hours',
     estMatch:     { minute: 40 },
-    evenHoursOnly: false,
+    oddHoursOnly: true,
     enabled:      true,
   },
   {
@@ -844,6 +997,144 @@ function toggleSub(key, event) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TEMPORARY EVENTS  — user-added one-shot events from the quick-add bar.
+// Persisted to localStorage so they survive page refreshes (useful on
+// mobile where you might switch away from the tab).
+// Each temp event auto-removes 5 minutes after its target time.
+// ═══════════════════════════════════════════════════════════════
+
+const TEMP_LIFETIME_MS = 5 * 60 * 1000;  // event lingers 5 min past target
+const TEMP_STORAGE_KEY = 'gorgon_temp_events';
+
+function loadTempEvents() {
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem(TEMP_STORAGE_KEY) || '[]'); }
+  catch { return []; }
+  const now = Date.now();
+  // Drop any that already expired while the tab was closed
+  return raw.filter(ev => ev.expiresAt > now);
+}
+
+function saveTempEvents() {
+  const temps = EVENTS.filter(ev => ev.temporary);
+  localStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(temps));
+}
+
+function nextMinuteOccurrence(minute, fromDate) {
+  // Returns a Date representing the next time the EST clock hits :minute
+  // strictly AFTER fromDate. Used by quick-add to compute target time.
+  const d = new Date(fromDate);
+  d.setSeconds(0, 0);
+  if (d.getMinutes() < minute) {
+    d.setMinutes(minute);
+  } else {
+    // already past :minute this hour — roll to next hour
+    d.setHours(d.getHours() + 1, minute);
+  }
+  return d;
+}
+
+function parseQuickAdd(raw) {
+  // Accepts patterns like "XX:35 druid event" (case-insensitive, flexible spacing)
+  // Returns { minute, name } or { error }
+  const trimmed = raw.trim();
+  if (!trimmed) return { error: 'Please type something.' };
+  const match = trimmed.match(/^xx:(\d{1,2})\s+(.+)$/i);
+  if (!match) {
+    return { error: 'Use format: XX:MM event name  (e.g. XX:35 druid event)' };
+  }
+  const minute = parseInt(match[1], 10);
+  if (isNaN(minute) || minute < 0 || minute > 59) {
+    return { error: 'Minutes must be 0–59.' };
+  }
+  const name = match[2].trim();
+  if (name.length === 0) return { error: 'Give the event a name.' };
+  if (name.length > 60)   return { error: 'Name too long (60 chars max).' };
+  return { minute, name };
+}
+
+function addTempEvent(parsed) {
+  const estNow = getEST();
+  const target = nextMinuteOccurrence(parsed.minute, estNow);
+
+  const id = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const minStr = String(parsed.minute).padStart(2, '0');
+
+  const ev = {
+    id,
+    name:           parsed.name,
+    category:       'temp',
+    gorgonTime:     '—',
+    estDisplay:     `XX:${minStr}`,
+    freq:           'One-time',
+    estMatch:       { minute: parsed.minute },
+    enabled:        true,
+    temporary:      true,
+    targetTimestamp: target.getTime(),
+    expiresAt:      target.getTime() + TEMP_LIFETIME_MS,
+  };
+
+  EVENTS.push(ev);
+
+  // Auto-subscribe to the "now" chime so the user actually gets the
+  // reminder they just set. They can still toggle it off in the row.
+  subs[id + ':now'] = true;
+  saveSubs(subs);
+
+  saveTempEvents();
+  renderTable();
+  renderFilterList();
+  return ev;
+}
+
+function cleanupExpiredTempEvents() {
+  const now = Date.now();
+  let changed = false;
+  for (let i = EVENTS.length - 1; i >= 0; i--) {
+    const ev = EVENTS[i];
+    if (ev.temporary && ev.expiresAt <= now) {
+      EVENTS.splice(i, 1);
+      // Clean up subscription state for this dead temp event
+      delete subs[ev.id + ':now'];
+      delete subs[ev.id + ':warn5'];
+      delete subs[ev.id + ':warn10'];
+      delete subs[ev.id + ':warn15'];
+      hidden.delete(ev.id);
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveSubs(subs);
+    saveHidden();
+    saveTempEvents();
+    renderTable();
+    renderFilterList();
+  }
+}
+
+// Manual deletion of a temp event via the ✕ button on its row.
+function deleteTempEvent(id, event) {
+  // Manually remove a temp event before its auto-cleanup time.
+  if (event) event.stopPropagation();
+  const idx = EVENTS.findIndex(ev => ev.id === id && ev.temporary);
+  if (idx === -1) return;
+  EVENTS.splice(idx, 1);
+  delete subs[id + ':now'];
+  delete subs[id + ':warn5'];
+  delete subs[id + ':warn10'];
+  delete subs[id + ':warn15'];
+  hidden.delete(id);
+  saveSubs(subs);
+  saveHidden();
+  saveTempEvents();
+  renderTable();
+  renderFilterList();
+}
+
+// Restore any temp events that survived a page refresh
+loadTempEvents().forEach(ev => EVENTS.push(ev));
+
+// ═══════════════════════════════════════════════════════════════
 // HIDDEN EVENTS STATE — persisted to localStorage
 // An event's id is in this set when it should be hidden from the table.
 // ═══════════════════════════════════════════════════════════════
@@ -865,7 +1156,20 @@ let hidden = (function() {
   return h;
 })();
 
-function isVisible(ev) { return !hidden.has(ev.id); }
+function isExpired(ev, estNow) {
+  // True if this is a one-time event whose moment has already passed.
+  // Used to hide stale one-time events from the schedule automatically.
+  const m = ev.estMatch;
+  if (m.year === undefined) return false;
+  const target = new Date(m.year, m.month ?? 0, m.date ?? 1, m.hour ?? 0, m.minute);
+  return target.getTime() + 60 * 1000 < estNow.getTime();  // +1min grace so "Now!" can show
+}
+
+function isVisible(ev) {
+  if (hidden.has(ev.id)) return false;
+  if (isExpired(ev, getEST())) return false;
+  return true;
+}
 
 function toggleHidden(id, e) {
   if (e) e.stopPropagation();
@@ -955,6 +1259,9 @@ function renderTable() {
     const w15on = isSubbed(ev.id + ':warn15');
     const nowOn = isSubbed(ev.id + ':now');
     const badge = `<span class="cat-badge cat-${ev.category}">${ev.category}</span>`;
+    const delBtn = ev.temporary
+      ? `<button class="temp-delete" onclick="deleteTempEvent('${ev.id}', event)" title="Remove this temporary event">&times;</button>`
+      : '';
     const bell = (key, label, on, title) => `
       <div class="bell-wrap ${on ? 'on' : ''}"
            onclick="toggleSub('${key}', event)"
@@ -971,7 +1278,7 @@ function renderTable() {
           ${bell(ev.id+':now',   'Now',nowOn,  nowOn?'Disable now chime'  :'Enable now chime')}
         </div>
       </td>
-      <td><div class="td-name">${ev.name} ${badge}</div></td>
+      <td><div class="td-name">${ev.name} ${badge}${delBtn}</div></td>
       <td class="td-gorgon">${ev.gorgonTime}</td>
       <td class="td-est">${ev.estDisplay}</td>
       <td class="td-freq">${ev.freq}</td>
@@ -993,10 +1300,14 @@ function minuteKey(id, suffix, d) {
 
 function matchesEST(ev, estNow) {
   const m = ev.estMatch;
-  if (m.day  !== undefined && estNow.getDay()    !== m.day)    return false;
-  if (m.hour !== undefined && estNow.getHours()  !== m.hour)   return false;
+  if (m.year  !== undefined && estNow.getFullYear() !== m.year)   return false;
+  if (m.month !== undefined && estNow.getMonth()    !== m.month)  return false;
+  if (m.date  !== undefined && estNow.getDate()     !== m.date)   return false;
+  if (m.day   !== undefined && estNow.getDay()      !== m.day)    return false;
+  if (m.hour  !== undefined && estNow.getHours()    !== m.hour)   return false;
   if (estNow.getMinutes() !== m.minute) return false;
   if (ev.evenHoursOnly && estNow.getHours() % 2 !== 0)        return false;
+  if (ev.oddHoursOnly  && estNow.getHours() % 2 === 0)        return false;
   return true;
 }
 
@@ -1119,6 +1430,40 @@ function gorgonTimeStr() {
 function nextOccurrenceEST(ev, estNow) {
   const m = ev.estMatch;
 
+  // One-shot event (used by temporary events) — return the absolute
+  // target time. The countdown formatter will show "Now!" once ms <= 0,
+  // and the cleanup pass removes the event from EVENTS shortly after.
+  if (ev.targetTimestamp !== undefined) {
+    return new Date(ev.targetTimestamp);
+  }
+
+  // One-time future event — year is pinned. Fire once and never again.
+  // Returns null after the moment has passed; isExpired() will hide it.
+  if (m.year !== undefined) {
+    const cand = new Date(m.year, m.month ?? 0, m.date ?? 1, m.hour ?? 0, m.minute);
+    return cand > estNow ? cand : null;
+  }
+
+  // Annual recurring — same month/date every year (e.g. game anniversary).
+  if (m.month !== undefined && m.date !== undefined) {
+    let cand = new Date(estNow.getFullYear(), m.month, m.date, m.hour ?? 0, m.minute);
+    if (cand <= estNow) {
+      cand = new Date(estNow.getFullYear() + 1, m.month, m.date, m.hour ?? 0, m.minute);
+    }
+    return cand;
+  }
+
+  // Monthly recurring — same date each month (e.g. monthly maintenance on the 1st).
+  // NOTE: dates 29-31 may skip months that lack that day; for predictable
+  // monthly events use date 1-28.
+  if (m.date !== undefined && m.day === undefined) {
+    let cand = new Date(estNow.getFullYear(), estNow.getMonth(), m.date, m.hour ?? 0, m.minute);
+    if (cand <= estNow) {
+      cand = new Date(estNow.getFullYear(), estNow.getMonth() + 1, m.date, m.hour ?? 0, m.minute);
+    }
+    return cand;
+  }
+
   // Fixed daily event (specific hour + minute, optional day-of-week)
   if (m.hour !== undefined && !ev.evenHoursOnly) {
     const candidate = new Date(estNow);
@@ -1144,6 +1489,30 @@ function nextOccurrenceEST(ev, estNow) {
     candidate.setHours(targetHour, m.minute, 0, 0);
     if (candidate <= estNow) {
       candidate.setHours(targetHour + 2, m.minute, 0, 0);
+    }
+    return candidate;
+  }
+
+  // Bi-hourly (oddHoursOnly) — fire at :minute of next odd hour
+  if (ev.oddHoursOnly) {
+    const candidate = new Date(estNow);
+    const nowHour = estNow.getHours();
+    // find next odd hour at or after now
+    let targetHour = nowHour % 2 !== 0 ? nowHour : nowHour + 1;
+    candidate.setHours(targetHour, m.minute, 0, 0);
+    if (candidate <= estNow) {
+      candidate.setHours(targetHour + 2, m.minute, 0, 0);
+    }
+    return candidate;
+  }
+
+  // Hourly — just a minute, no parity. Every hour at :MM.
+  // (e.g. estMatch:{minute:0} fires at the top of every hour)
+  if (m.minute !== undefined) {
+    const candidate = new Date(estNow);
+    candidate.setMinutes(m.minute, 0, 0);
+    if (candidate <= estNow) {
+      candidate.setHours(candidate.getHours() + 1, m.minute, 0, 0);
     }
     return candidate;
   }
@@ -1184,8 +1553,47 @@ function tick() {
   document.getElementById('local-time').textContent  = localTimeStr();
   document.getElementById('est-time').textContent    = estTimeStr();
   document.getElementById('gorgon-time').textContent = gorgonTimeStr();
+  cleanupExpiredTempEvents();
   checkAlerts(estNow);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK-ADD INPUT WIRING
+// ═══════════════════════════════════════════════════════════════
+
+function handleQuickAddSubmit() {
+  const input = document.getElementById('quickadd-input');
+  const hint  = document.getElementById('quickadd-hint');
+  const result = parseQuickAdd(input.value);
+
+  if (result.error) {
+    hint.textContent = result.error;
+    hint.classList.add('error');
+    return;
+  }
+
+  const ev = addTempEvent(result);
+
+  // Reset hint with confirmation
+  const target = new Date(ev.targetTimestamp);
+  const tStr = target.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  hint.innerHTML = `Added <strong>${ev.name}</strong> &mdash; fires at ${tStr} EST.`;
+  hint.classList.remove('error');
+  input.value = '';
+}
+
+document.getElementById('quickadd-btn').addEventListener('click', handleQuickAddSubmit);
+document.getElementById('quickadd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleQuickAddSubmit();
+});
+document.getElementById('quickadd-input').addEventListener('input', () => {
+  // Clear error styling once the user starts editing again
+  const hint = document.getElementById('quickadd-hint');
+  if (hint.classList.contains('error')) {
+    hint.classList.remove('error');
+    hint.innerHTML = 'Format: <strong>XX:MM event name</strong> &mdash; fires at the next :MM minute, then auto-removes 5 minutes later.';
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
