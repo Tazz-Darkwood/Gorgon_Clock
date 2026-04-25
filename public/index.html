@@ -206,84 +206,6 @@
     }
     .cat-daily   { color: var(--event-amber); border-color: var(--amber-dim); }
     .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
-    .cat-temp    { color: #6db3a8;            border-color: #3a6058; }
-
-    /* ── Delete button for temp event rows ── */
-    .temp-delete {
-      display: inline-block;
-      margin-left: 0.5rem;
-      width: 1.3rem;
-      height: 1.3rem;
-      line-height: 1.1rem;
-      text-align: center;
-      font-size: 0.85rem;
-      font-family: 'Spectral', serif;
-      color: var(--body-faint);
-      border: 1px solid var(--body-faint);
-      background: transparent;
-      cursor: pointer;
-      vertical-align: middle;
-      transition: color 0.15s, border-color 0.15s;
-      padding: 0;
-    }
-    .temp-delete:hover {
-      color: var(--event-red);
-      border-color: var(--event-red);
-    }
-
-    /* ── Quick-add bar for temporary events ── */
-    .quickadd {
-      margin-top: 1rem;
-      padding-top: 0.9rem;
-      border-top: 1px solid var(--body-faint);
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-    .quickadd-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      color: var(--body-dim);
-      text-transform: uppercase;
-    }
-    .quickadd-row {
-      display: flex;
-      gap: 0.5rem;
-      align-items: stretch;
-    }
-    .quickadd-input {
-      flex: 1;
-      font-family: 'Spectral', serif;
-      font-size: 0.85rem;
-      background: var(--panel-bg-deep);
-      border: 1px solid var(--body-faint);
-      color: var(--body-text);
-      padding: 0.5rem 0.7rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .quickadd-input:focus { border-color: var(--maroon-mid); }
-    .quickadd-input::placeholder { color: var(--body-dim); font-style: italic; }
-    .quickadd-btn {
-      font-family: 'Spectral', serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
-      background: var(--panel-bg-deep);
-      border: 1px solid var(--maroon-mid);
-      color: var(--body-text);
-      padding: 0.5rem 1.1rem;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .quickadd-btn:hover { border-color: var(--amber-bright); color: var(--amber-bright); }
-    .quickadd-hint {
-      font-family: 'Spectral', serif;
-      font-size: 0.7rem;
-      color: var(--body-dim);
-      font-style: italic;
-    }
-    .quickadd-hint.error { color: var(--event-red); font-style: normal; }
 
     .td-name {
       font-family: 'Cinzel', serif;
@@ -638,186 +560,6 @@
       /* Bell icons in first column — keep them tappable but compact */
       .td-name { font-size: 0.78rem; }
     }
-
-    /* ═══════════════════════════════════════════════════════════════
-       CHAT LOG PANEL
-       ═══════════════════════════════════════════════════════════════ */
-    .chatlog-panel {
-      width: 100%;
-      max-width: 1100px;
-      background: var(--panel-bg);
-      border: 1px solid var(--body-faint);
-      border-top: 2px solid var(--maroon-mid);
-      padding: 1rem 1.5rem 1.2rem;
-    }
-
-    .chatlog-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 0.6rem;
-      border-bottom: 1px solid var(--body-faint);
-      margin-bottom: 0.8rem;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-    }
-
-    .chatlog-header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-    }
-
-    .chatlog-load-btn {
-      font-family: 'Spectral', serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
-      background: var(--panel-bg-deep);
-      border: 1px solid var(--maroon-mid);
-      color: var(--body-text);
-      padding: 0.4rem 0.9rem;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      white-space: nowrap;
-    }
-    .chatlog-load-btn:hover { border-color: var(--amber); color: var(--amber); }
-
-    .chatlog-filename {
-      font-family: 'Spectral', serif;
-      font-size: 0.7rem;
-      font-style: italic;
-      color: var(--body-dim);
-    }
-
-    .chatlog-count {
-      font-family: 'Cinzel', serif;
-      font-size: 0.65rem;
-      color: var(--body-dim);
-      letter-spacing: 0.1em;
-    }
-
-    /* Hidden real file input */
-    #chatlog-file-input { display: none; }
-
-    .chatlog-empty {
-      font-family: 'Spectral', serif;
-      font-size: 0.85rem;
-      font-style: italic;
-      color: var(--body-faint);
-      text-align: center;
-      padding: 1.5rem 0;
-    }
-
-    .chatlog-hint {
-      font-family: 'Spectral', serif;
-      font-size: 0.68rem;
-      color: var(--body-faint);
-      font-style: italic;
-      margin-top: 0.3rem;
-    }
-
-    /* Result list */
-    .chatlog-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .chatlog-entry {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.7rem;
-      padding: 0.55rem 0.7rem;
-      background: var(--panel-bg-deep);
-      border: 1px solid var(--body-faint);
-      border-left: 2px solid var(--maroon);
-    }
-
-    .chatlog-meta {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-      min-width: 90px;
-    }
-
-    .chatlog-time {
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      color: var(--amber);
-    }
-
-    .chatlog-channel {
-      font-family: 'Spectral', serif;
-      font-size: 0.62rem;
-      font-style: italic;
-      color: var(--body-dim);
-    }
-
-    .chatlog-msg {
-      flex: 1;
-      font-family: 'Spectral', serif;
-      font-size: 0.85rem;
-      color: var(--body-text);
-      line-height: 1.45;
-    }
-
-    /* Highlight the XX:MM portion inside the message */
-    .chatlog-msg .highlight {
-      color: var(--amber-bright);
-      font-weight: 600;
-    }
-
-    .chatlog-add-btn {
-      flex-shrink: 0;
-      font-family: 'Spectral', serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.05em;
-      background: none;
-      border: 1px solid var(--maroon-mid);
-      color: var(--body-dim);
-      padding: 0.3rem 0.7rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: border-color 0.2s, color 0.2s;
-      align-self: center;
-    }
-    .chatlog-add-btn:hover { border-color: var(--amber); color: var(--amber); }
-    .chatlog-add-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
-      border-color: var(--body-faint);
-      color: var(--body-faint);
-    }
-
-    .chatlog-remove-btn {
-      flex-shrink: 0;
-      font-family: 'Spectral', serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.05em;
-      background: none;
-      border: 1px solid var(--body-faint);
-      color: var(--body-faint);
-      padding: 0.3rem 0.55rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: border-color 0.2s, color 0.2s, opacity 0.2s;
-      align-self: center;
-      line-height: 1;
-    }
-    .chatlog-remove-btn:hover {
-      border-color: var(--event-red);
-      color: var(--event-red);
-    }
-
-    @media (max-width: 640px) {
-      .chatlog-panel { padding: 0.8rem 0.7rem 1rem; }
-      .chatlog-entry { flex-wrap: wrap; }
-      .chatlog-meta  { min-width: unset; flex-direction: row; gap: 0.5rem; align-items: baseline; }
-      .chatlog-add-btn { width: 100%; text-align: center; }
-      .chatlog-remove-btn { width: 100%; text-align: center; }
-    }
   </style>
 </head>
 <body>
@@ -895,49 +637,8 @@
         <!-- rows injected by JS -->
       </tbody>
     </table>
-
-    <div class="quickadd">
-      <div class="quickadd-label">Quick Add &mdash; Temporary Event</div>
-      <div class="quickadd-row">
-        <input type="text" id="quickadd-input" class="quickadd-input"
-               placeholder="e.g.  XX:35 druid event" autocomplete="off" />
-        <button class="quickadd-btn" id="quickadd-btn">Add</button>
-      </div>
-      <div class="quickadd-hint" id="quickadd-hint">
-        Format: <strong>XX:MM event name</strong> &mdash; fires at the next :MM minute, then auto-removes 5 minutes later.
-      </div>
-    </div>
   </div>
 
-
-  <div class="section-rule"></div>
-
-  <!-- ── Chat Log Parser ── -->
-  <div class="chatlog-panel">
-    <div class="chatlog-header">
-      <div class="chatlog-header-left">
-        <div class="section-label">Chat Log &mdash; Event Announcements</div>
-        <span class="chatlog-filename" id="chatlog-filename">No log loaded</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.7rem;">
-        <span class="chatlog-count" id="chatlog-count"></span>
-        <button class="chatlog-load-btn" onclick="document.getElementById('chatlog-file-input').click()">
-          Load Today's Log
-        </button>
-        <input type="file" id="chatlog-file-input" accept=".log,.txt" />
-      </div>
-    </div>
-
-    <div id="chatlog-results">
-      <div class="chatlog-empty">
-        Load today's chat log to see player-announced event times.<br>
-        <span class="chatlog-hint">
-          Found at: \AppData\LocalLow\Elder Game\Project Gorgon\ChatLogs<br>
-          Today's file: <strong id="chatlog-expected-name">--</strong>
-        </span>
-      </div>
-    </div>
-  </div>
   <div class="footer">Fan Made Chronicle &mdash; syncing every second</div>
 
 </div><!-- .shell -->
@@ -946,93 +647,30 @@
 // ═══════════════════════════════════════════════════════════════
 // EVENT REGISTRY
 // ───────────────────────────────────────────────────────────────
-// To ADD an event:    push a new object into EVENTS below.
-// To REMOVE one:      delete or comment out its object.
-// To DISABLE one:     set enabled: false (keeps it in code but hides it).
+// To ADD an event:  push a new object into EVENTS below.
+// To REMOVE one:   delete or comment out its object.
 //
 // SECURITY NOTE: name, category, id, and display fields are inserted
-// directly into innerHTML. Keep them as plain text — no HTML, no quotes.
-// These are author-controlled constants, not user input.
+// directly into innerHTML. Keep them as plain text with no HTML or
+// quotes — they are developer-controlled constants, not user input.
 //
-// ── REQUIRED FIELDS ────────────────────────────────────────────
-//   id            unique string (used for alert dedup + saved settings)
-//   name          shown in the schedule table
-//   category      'daily' | 'special'  (controls badge color)
-//   gorgonTime    in-game clock display (e.g. '1:00 AM' or '—')
-//   estDisplay    EST time hint shown in the table
-//   freq          recurrence description shown in the table
-//   estMatch      WHEN the event fires — see patterns below
-//   enabled       true normally; false to hide without deleting
+// Fields:
+//   id          — unique string key (used for alert deduplication & storage)
+//   name        — displayed in the schedule table
+//   category    — 'daily' | 'special'
+//   gorgonTime  — what the in-game clock shows when it fires  (display only)
+//   estDisplay  — human-readable EST time shown in table      (display only)
+//   freq        — recurrence description shown in table       (display only)
 //
-// ── OPTIONAL FIELDS ────────────────────────────────────────────
-//   evenHoursOnly true → only fires on even EST hours
-//   oddHoursOnly  true → only fires on odd EST hours
-//   warningOffset minutes before fire-time for the warning chime (default 5)
+//   estMatch    — object used by the alert engine:
+//     { minute, hour? }         repeating (every even/odd hour)
+//     { minute, hour, day? }    fixed daily or weekly (day 0=Sun…6=Sat)
 //
-// ── estMatch PATTERNS ──────────────────────────────────────────
-//   Months are 0-indexed: Jan=0, Feb=1, … Dec=11
-//   Days of week: Sun=0, Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6
+//   evenHoursOnly — true  → only fires when EST hour is even
+//                   false/omitted → fires every matching hour
 //
-//   {minute}                              every hour at :MM
-//                                         (combine w/ evenHoursOnly or oddHoursOnly)
-//   {minute, hour}                        daily at HH:MM
-//   {minute, hour, day}                   weekly at HH:MM on day-of-week
-//   {minute, hour, date}                  monthly on the Nth of the month
-//   {minute, hour, month, date}           yearly on Month/Date
-//   {minute, hour, year, month, date}     ONE-TIME at a specific calendar moment
-//                                         (auto-hides after the moment passes)
-//
-// ── COPY-PASTE TEMPLATES ───────────────────────────────────────
-//
-//   // Bi-hourly on odd hours at :40
-//   {
-//     id:'my-id', name:'My Event', category:'daily',
-//     gorgonTime:'8:00 PM', estDisplay:'XX:40 (odd hrs)',
-//     freq:'Every odd hour', estMatch:{minute:40},
-//     oddHoursOnly:true, enabled:true,
-//   },
-//
-//   // Daily at 9:30 PM EST
-//   {
-//     id:'evening-raid', name:'Evening Raid', category:'daily',
-//     gorgonTime:'—', estDisplay:'9:30 PM',
-//     freq:'Daily', estMatch:{hour:21, minute:30},
-//     enabled:true,
-//   },
-//
-//   // Weekly — Wednesday at 8:00 PM EST
-//   {
-//     id:'wed-tournament', name:'Wednesday Tournament', category:'special',
-//     gorgonTime:'—', estDisplay:'Wed 8:00 PM',
-//     freq:'Every Wednesday', estMatch:{day:3, hour:20, minute:0},
-//     enabled:true,
-//   },
-//
-//   // Monthly — 1st of every month at midnight
-//   {
-//     id:'monthly-reset', name:'Monthly Reset', category:'special',
-//     gorgonTime:'—', estDisplay:'1st of month, 12:00 AM',
-//     freq:'Monthly', estMatch:{date:1, hour:0, minute:0},
-//     enabled:true,
-//   },
-//
-//   // Annual — every March 15th at 6:00 PM EST
-//   {
-//     id:'spring-festival', name:'Spring Festival', category:'special',
-//     gorgonTime:'—', estDisplay:'Mar 15, 6:00 PM',
-//     freq:'Annual', estMatch:{month:2, date:15, hour:18, minute:0},
-//     enabled:true,
-//   },
-//
-//   // One-time future event — Dec 1, 2026 at 8:00 PM EST.
-//   // Auto-hides itself the day after; safe to leave in the array.
-//   {
-//     id:'expansion-launch', name:'Expansion Launch', category:'special',
-//     gorgonTime:'—', estDisplay:'Dec 1, 2026 — 8:00 PM',
-//     freq:'One-time', estMatch:{year:2026, month:11, date:1, hour:20, minute:0},
-//     enabled:true,
-//   },
-//
+//   warningOffset — minutes before estMatch to play the warning chime
+//                   (default 5 if omitted)
 // ═══════════════════════════════════════════════════════════════
 
 const EVENTS = [
@@ -1043,8 +681,8 @@ const EVENTS = [
     name:         'Elt Blood Event',
     category:     'daily',
     gorgonTime:   '1:00 AM',
-    estDisplay:   'XX:05 (even hrs)',
-    freq:         'Every two hours',
+    estDisplay:   ':05 (even hrs)',
+    freq:         'Every even hour + 5 min',
     estMatch:     { minute: 5 },
     evenHoursOnly: true,
     enabled:      true,   // set false to hide from schedule
@@ -1054,21 +692,10 @@ const EVENTS = [
     name:         'SV Blood Event',
     category:     'daily',
     gorgonTime:   '3:00 AM',
-    estDisplay:   'XX:15 (even hrs)',
-    freq:         'Every two hours',
+    estDisplay:   ':15 (even hrs)',
+    freq:         'Every even hour + 15 min',
     estMatch:     { minute: 15 },
     evenHoursOnly: true,
-    enabled:      true,
-  },
-  {
-    id:           'povus',
-    name:         'Povus Nightly Raid',
-    category:     'daily',
-    gorgonTime:   '8:00 PM',
-    estDisplay:   'XX:40 (odd hrs)',
-    freq:         'Every two hours',
-    estMatch:     { minute: 40 },
-    oddHoursOnly: true,
     enabled:      true,
   },
   {
@@ -1206,144 +833,6 @@ function toggleSub(key, event) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TEMPORARY EVENTS  — user-added one-shot events from the quick-add bar.
-// Persisted to localStorage so they survive page refreshes (useful on
-// mobile where you might switch away from the tab).
-// Each temp event auto-removes 5 minutes after its target time.
-// ═══════════════════════════════════════════════════════════════
-
-const TEMP_LIFETIME_MS = 5 * 60 * 1000;  // event lingers 5 min past target
-const TEMP_STORAGE_KEY = 'gorgon_temp_events';
-
-function loadTempEvents() {
-  let raw;
-  try { raw = JSON.parse(localStorage.getItem(TEMP_STORAGE_KEY) || '[]'); }
-  catch { return []; }
-  const now = Date.now();
-  // Drop any that already expired while the tab was closed
-  return raw.filter(ev => ev.expiresAt > now);
-}
-
-function saveTempEvents() {
-  const temps = EVENTS.filter(ev => ev.temporary);
-  localStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(temps));
-}
-
-function nextMinuteOccurrence(minute, fromDate) {
-  // Returns a Date representing the next time the EST clock hits :minute
-  // strictly AFTER fromDate. Used by quick-add to compute target time.
-  const d = new Date(fromDate);
-  d.setSeconds(0, 0);
-  if (d.getMinutes() < minute) {
-    d.setMinutes(minute);
-  } else {
-    // already past :minute this hour — roll to next hour
-    d.setHours(d.getHours() + 1, minute);
-  }
-  return d;
-}
-
-function parseQuickAdd(raw) {
-  // Accepts patterns like "XX:35 druid event" (case-insensitive, flexible spacing)
-  // Returns { minute, name } or { error }
-  const trimmed = raw.trim();
-  if (!trimmed) return { error: 'Please type something.' };
-  const match = trimmed.match(/^xx:(\d{1,2})\s+(.+)$/i);
-  if (!match) {
-    return { error: 'Use format: XX:MM event name  (e.g. XX:35 druid event)' };
-  }
-  const minute = parseInt(match[1], 10);
-  if (isNaN(minute) || minute < 0 || minute > 59) {
-    return { error: 'Minutes must be 0–59.' };
-  }
-  const name = match[2].trim();
-  if (name.length === 0) return { error: 'Give the event a name.' };
-  if (name.length > 60)   return { error: 'Name too long (60 chars max).' };
-  return { minute, name };
-}
-
-function addTempEvent(parsed) {
-  const estNow = getEST();
-  const target = nextMinuteOccurrence(parsed.minute, estNow);
-
-  const id = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const minStr = String(parsed.minute).padStart(2, '0');
-
-  const ev = {
-    id,
-    name:           parsed.name,
-    category:       'temp',
-    gorgonTime:     '—',
-    estDisplay:     `XX:${minStr}`,
-    freq:           'One-time',
-    estMatch:       { minute: parsed.minute },
-    enabled:        true,
-    temporary:      true,
-    targetTimestamp: target.getTime(),
-    expiresAt:      target.getTime() + TEMP_LIFETIME_MS,
-  };
-
-  EVENTS.push(ev);
-
-  // Auto-subscribe to the "now" chime so the user actually gets the
-  // reminder they just set. They can still toggle it off in the row.
-  subs[id + ':now'] = true;
-  saveSubs(subs);
-
-  saveTempEvents();
-  renderTable();
-  renderFilterList();
-  return ev;
-}
-
-function cleanupExpiredTempEvents() {
-  const now = Date.now();
-  let changed = false;
-  for (let i = EVENTS.length - 1; i >= 0; i--) {
-    const ev = EVENTS[i];
-    if (ev.temporary && ev.expiresAt <= now) {
-      EVENTS.splice(i, 1);
-      // Clean up subscription state for this dead temp event
-      delete subs[ev.id + ':now'];
-      delete subs[ev.id + ':warn5'];
-      delete subs[ev.id + ':warn10'];
-      delete subs[ev.id + ':warn15'];
-      hidden.delete(ev.id);
-      changed = true;
-    }
-  }
-  if (changed) {
-    saveSubs(subs);
-    saveHidden();
-    saveTempEvents();
-    renderTable();
-    renderFilterList();
-  }
-}
-
-// Manual deletion of a temp event via the ✕ button on its row.
-function deleteTempEvent(id, event) {
-  // Manually remove a temp event before its auto-cleanup time.
-  if (event) event.stopPropagation();
-  const idx = EVENTS.findIndex(ev => ev.id === id && ev.temporary);
-  if (idx === -1) return;
-  EVENTS.splice(idx, 1);
-  delete subs[id + ':now'];
-  delete subs[id + ':warn5'];
-  delete subs[id + ':warn10'];
-  delete subs[id + ':warn15'];
-  hidden.delete(id);
-  saveSubs(subs);
-  saveHidden();
-  saveTempEvents();
-  renderTable();
-  renderFilterList();
-}
-
-// Restore any temp events that survived a page refresh
-loadTempEvents().forEach(ev => EVENTS.push(ev));
-
-// ═══════════════════════════════════════════════════════════════
 // HIDDEN EVENTS STATE — persisted to localStorage
 // An event's id is in this set when it should be hidden from the table.
 // ═══════════════════════════════════════════════════════════════
@@ -1365,20 +854,7 @@ let hidden = (function() {
   return h;
 })();
 
-function isExpired(ev, estNow) {
-  // True if this is a one-time event whose moment has already passed.
-  // Used to hide stale one-time events from the schedule automatically.
-  const m = ev.estMatch;
-  if (m.year === undefined) return false;
-  const target = new Date(m.year, m.month ?? 0, m.date ?? 1, m.hour ?? 0, m.minute);
-  return target.getTime() + 60 * 1000 < estNow.getTime();  // +1min grace so "Now!" can show
-}
-
-function isVisible(ev) {
-  if (hidden.has(ev.id)) return false;
-  if (isExpired(ev, getEST())) return false;
-  return true;
-}
+function isVisible(ev) { return !hidden.has(ev.id); }
 
 function toggleHidden(id, e) {
   if (e) e.stopPropagation();
@@ -1468,9 +944,6 @@ function renderTable() {
     const w15on = isSubbed(ev.id + ':warn15');
     const nowOn = isSubbed(ev.id + ':now');
     const badge = `<span class="cat-badge cat-${ev.category}">${ev.category}</span>`;
-    const delBtn = ev.temporary
-      ? `<button class="temp-delete" onclick="deleteTempEvent('${ev.id}', event)" title="Remove this temporary event">&times;</button>`
-      : '';
     const bell = (key, label, on, title) => `
       <div class="bell-wrap ${on ? 'on' : ''}"
            onclick="toggleSub('${key}', event)"
@@ -1487,7 +960,7 @@ function renderTable() {
           ${bell(ev.id+':now',   'Now',nowOn,  nowOn?'Disable now chime'  :'Enable now chime')}
         </div>
       </td>
-      <td><div class="td-name">${ev.name} ${badge}${delBtn}</div></td>
+      <td><div class="td-name">${ev.name} ${badge}</div></td>
       <td class="td-gorgon">${ev.gorgonTime}</td>
       <td class="td-est">${ev.estDisplay}</td>
       <td class="td-freq">${ev.freq}</td>
@@ -1509,14 +982,10 @@ function minuteKey(id, suffix, d) {
 
 function matchesEST(ev, estNow) {
   const m = ev.estMatch;
-  if (m.year  !== undefined && estNow.getFullYear() !== m.year)   return false;
-  if (m.month !== undefined && estNow.getMonth()    !== m.month)  return false;
-  if (m.date  !== undefined && estNow.getDate()     !== m.date)   return false;
-  if (m.day   !== undefined && estNow.getDay()      !== m.day)    return false;
-  if (m.hour  !== undefined && estNow.getHours()    !== m.hour)   return false;
+  if (m.day  !== undefined && estNow.getDay()    !== m.day)    return false;
+  if (m.hour !== undefined && estNow.getHours()  !== m.hour)   return false;
   if (estNow.getMinutes() !== m.minute) return false;
   if (ev.evenHoursOnly && estNow.getHours() % 2 !== 0)        return false;
-  if (ev.oddHoursOnly  && estNow.getHours() % 2 === 0)        return false;
   return true;
 }
 
@@ -1639,40 +1108,6 @@ function gorgonTimeStr() {
 function nextOccurrenceEST(ev, estNow) {
   const m = ev.estMatch;
 
-  // One-shot event (used by temporary events) — return the absolute
-  // target time. The countdown formatter will show "Now!" once ms <= 0,
-  // and the cleanup pass removes the event from EVENTS shortly after.
-  if (ev.targetTimestamp !== undefined) {
-    return new Date(ev.targetTimestamp);
-  }
-
-  // One-time future event — year is pinned. Fire once and never again.
-  // Returns null after the moment has passed; isExpired() will hide it.
-  if (m.year !== undefined) {
-    const cand = new Date(m.year, m.month ?? 0, m.date ?? 1, m.hour ?? 0, m.minute);
-    return cand > estNow ? cand : null;
-  }
-
-  // Annual recurring — same month/date every year (e.g. game anniversary).
-  if (m.month !== undefined && m.date !== undefined) {
-    let cand = new Date(estNow.getFullYear(), m.month, m.date, m.hour ?? 0, m.minute);
-    if (cand <= estNow) {
-      cand = new Date(estNow.getFullYear() + 1, m.month, m.date, m.hour ?? 0, m.minute);
-    }
-    return cand;
-  }
-
-  // Monthly recurring — same date each month (e.g. monthly maintenance on the 1st).
-  // NOTE: dates 29-31 may skip months that lack that day; for predictable
-  // monthly events use date 1-28.
-  if (m.date !== undefined && m.day === undefined) {
-    let cand = new Date(estNow.getFullYear(), estNow.getMonth(), m.date, m.hour ?? 0, m.minute);
-    if (cand <= estNow) {
-      cand = new Date(estNow.getFullYear(), estNow.getMonth() + 1, m.date, m.hour ?? 0, m.minute);
-    }
-    return cand;
-  }
-
   // Fixed daily event (specific hour + minute, optional day-of-week)
   if (m.hour !== undefined && !ev.evenHoursOnly) {
     const candidate = new Date(estNow);
@@ -1698,30 +1133,6 @@ function nextOccurrenceEST(ev, estNow) {
     candidate.setHours(targetHour, m.minute, 0, 0);
     if (candidate <= estNow) {
       candidate.setHours(targetHour + 2, m.minute, 0, 0);
-    }
-    return candidate;
-  }
-
-  // Bi-hourly (oddHoursOnly) — fire at :minute of next odd hour
-  if (ev.oddHoursOnly) {
-    const candidate = new Date(estNow);
-    const nowHour = estNow.getHours();
-    // find next odd hour at or after now
-    let targetHour = nowHour % 2 !== 0 ? nowHour : nowHour + 1;
-    candidate.setHours(targetHour, m.minute, 0, 0);
-    if (candidate <= estNow) {
-      candidate.setHours(targetHour + 2, m.minute, 0, 0);
-    }
-    return candidate;
-  }
-
-  // Hourly — just a minute, no parity. Every hour at :MM.
-  // (e.g. estMatch:{minute:0} fires at the top of every hour)
-  if (m.minute !== undefined) {
-    const candidate = new Date(estNow);
-    candidate.setMinutes(m.minute, 0, 0);
-    if (candidate <= estNow) {
-      candidate.setHours(candidate.getHours() + 1, m.minute, 0, 0);
     }
     return candidate;
   }
@@ -1762,47 +1173,8 @@ function tick() {
   document.getElementById('local-time').textContent  = localTimeStr();
   document.getElementById('est-time').textContent    = estTimeStr();
   document.getElementById('gorgon-time').textContent = gorgonTimeStr();
-  cleanupExpiredTempEvents();
   checkAlerts(estNow);
 }
-
-// ═══════════════════════════════════════════════════════════════
-// QUICK-ADD INPUT WIRING
-// ═══════════════════════════════════════════════════════════════
-
-function handleQuickAddSubmit() {
-  const input = document.getElementById('quickadd-input');
-  const hint  = document.getElementById('quickadd-hint');
-  const result = parseQuickAdd(input.value);
-
-  if (result.error) {
-    hint.textContent = result.error;
-    hint.classList.add('error');
-    return;
-  }
-
-  const ev = addTempEvent(result);
-
-  // Reset hint with confirmation
-  const target = new Date(ev.targetTimestamp);
-  const tStr = target.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  hint.innerHTML = `Added <strong>${ev.name}</strong> &mdash; fires at ${tStr} EST.`;
-  hint.classList.remove('error');
-  input.value = '';
-}
-
-document.getElementById('quickadd-btn').addEventListener('click', handleQuickAddSubmit);
-document.getElementById('quickadd-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleQuickAddSubmit();
-});
-document.getElementById('quickadd-input').addEventListener('input', () => {
-  // Clear error styling once the user starts editing again
-  const hint = document.getElementById('quickadd-hint');
-  if (hint.classList.contains('error')) {
-    hint.classList.remove('error');
-    hint.innerHTML = 'Format: <strong>XX:MM event name</strong> &mdash; fires at the next :MM minute, then auto-removes 5 minutes later.';
-  }
-});
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -1821,302 +1193,6 @@ tick();
 function tickCountdowns() { updateCountdowns(getEST()); }
 setInterval(tickCountdowns, 1000);
 tickCountdowns();
-
-// ═══════════════════════════════════════════════════════════════
-// CHAT LOG PARSER
-// ───────────────────────────────────────────────────────────────
-// Reads a Project Gorgon .log file selected by the user and
-// extracts any player chat messages containing an XX:MM or xx:MM
-// pattern (community convention for announcing event times).
-//
-// Log format per line:
-//   YY-MM-DD HH:MM:SS\t[Channel] PlayerName: message text
-//   YY-MM-DD HH:MM:SS\t[Status] some system text
-//   YY-MM-DD HH:MM:SS\t** some system text
-//
-// We only surface lines from actual player channels:
-//   [Global] [Help] [Trade] [Guild] [Party] [Druid] [Tell] etc.
-// Status, NPC Chatter, Action Emotes, and system lines are skipped.
-// ═══════════════════════════════════════════════════════════════
-
-// Regex: matches XX:MM or xx:MM (case-insensitive, digits after colon)
-const CLOCK_PATTERN = /[Xx][Xx]:([0-5][0-9])/g;
-
-// Channels we DO want to show (player-driven communication)
-const PLAYER_CHANNELS = /^\[(Global|Help|Trade|Guild|Party|Tell|Druid|Advice|Nearby|Group|Hunt)\]/i;
-
-// Show today's expected filename on load
-(function setExpectedFilename() {
-  const now = getEST();  // use EST since log files are named by game server date
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const name = `Chat-${yy}-${mm}-${dd}.log`;
-  const el = document.getElementById('chatlog-expected-name');
-  if (el) el.textContent = name;
-})();
-
-function parseChatLog(text) {
-  const lines = text.split(/\r?\n/);
-  const matches = [];
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-
-    // Log line format: "YY-MM-DD HH:MM:SS\t<rest>"
-    const tabIdx = line.indexOf('\t');
-    if (tabIdx === -1) continue;
-
-    const timestamp = line.slice(0, tabIdx).trim();   // "26-04-24 22:38:35"
-    const rest      = line.slice(tabIdx + 1).trim();  // "[Global] Name: msg"
-
-    // Skip non-player lines
-    if (!PLAYER_CHANNELS.test(rest)) continue;
-
-    // Check for XX:MM pattern
-    // Reset lastIndex since we reuse the regex
-    CLOCK_PATTERN.lastIndex = 0;
-    if (!CLOCK_PATTERN.test(rest)) continue;
-
-    // Parse channel and sender
-    // rest looks like: [Global] PlayerName: message text
-    //              or: [Tell] Sender->You: message
-    const chanMatch = rest.match(/^(\[[^\]]+\])\s*/);
-    const channel   = chanMatch ? chanMatch[1] : '';
-    const afterChan = chanMatch ? rest.slice(chanMatch[0].length) : rest;
-
-    // Extract just the time portion from the timestamp
-    const timePart = timestamp.includes(' ') ? timestamp.split(' ')[1] : timestamp;
-
-    // Extract the minute from XX:MM matches for the "Add" button
-    CLOCK_PATTERN.lastIndex = 0;
-    const minuteMatches = [];
-    let m;
-    while ((m = CLOCK_PATTERN.exec(rest)) !== null) {
-      minuteMatches.push(parseInt(m[1], 10));
-    }
-
-    matches.push({
-      timestamp,
-      timePart,
-      channel,
-      text: afterChan,
-      rawLine: rest,
-      minuteMatches,        // e.g. [35] or [25, 35]
-    });
-  }
-
-  return matches;
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function highlightClockPattern(text) {
-  // Wrap XX:MM/xx:MM occurrences in a highlight span
-  return escapeHtml(text).replace(
-    /([Xx][Xx]:[0-5][0-9])/g,
-    '<span class="highlight">$1</span>'
-  );
-}
-
-// ── Chat log live-poll state ─────────────────────────────────────
-let chatFile        = null;   // the File object kept alive between polls
-let chatRowCount    = 0;      // how many result rows are already rendered
-let addedKeys       = new Set(); // unique keys for rows already "Added"
-let dismissedKeys   = new Set(); // unique keys for rows manually removed
-
-// A stable key for a match so we can recognise it across re-reads
-function matchKey(entry) {
-  return `${entry.timestamp}|${entry.rawLine}`;
-}
-
-// Build a single result row DOM node
-function buildChatRow(entry) {
-  const key = matchKey(entry);
-
-  const row = document.createElement('div');
-  row.className = 'chatlog-entry';
-  row.dataset.key = key;
-
-  const meta = document.createElement('div');
-  meta.className = 'chatlog-meta';
-
-  const timeEl = document.createElement('div');
-  timeEl.className = 'chatlog-time';
-  timeEl.textContent = entry.timePart;
-
-  const chanEl = document.createElement('div');
-  chanEl.className = 'chatlog-channel';
-  chanEl.textContent = entry.channel;
-
-  meta.appendChild(timeEl);
-  meta.appendChild(chanEl);
-
-  const msgEl = document.createElement('div');
-  msgEl.className = 'chatlog-msg';
-  msgEl.innerHTML = highlightClockPattern(entry.text);
-
-  // Button group: Add + Remove stacked vertically
-  const btnGroup = document.createElement('div');
-  btnGroup.style.cssText = 'display:flex;flex-direction:column;gap:4px;align-self:center;flex-shrink:0;';
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'chatlog-add-btn';
-
-  // Restore "Added" state if this row was already actioned
-  if (addedKeys.has(key)) {
-    addBtn.textContent = '✓ Added';
-    addBtn.disabled = true;
-  } else {
-    addBtn.textContent = '+ Add Event';
-    addBtn.title = entry.minuteMatches.length === 1
-      ? `Add as temp event at XX:${String(entry.minuteMatches[0]).padStart(2,'0')}`
-      : 'Pre-fill quick-add with this timing';
-
-    addBtn.addEventListener('click', () => {
-      const minute     = entry.minuteMatches[0];
-      const paddedMin  = String(minute).padStart(2, '0');
-      const suggestedName = entry.text
-        .replace(/[Xx][Xx]:[0-5][0-9]/g, '')
-        .replace(/[^a-zA-Z0-9 '\-]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 40) || 'Chat event';
-
-      const input = document.getElementById('quickadd-input');
-      input.value = `XX:${paddedMin} ${suggestedName}`;
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      input.focus();
-
-      if (entry.minuteMatches.length === 1) {
-        handleQuickAddSubmit();
-        addBtn.textContent = '✓ Added';
-        addBtn.disabled = true;
-        addedKeys.add(key);
-      }
-    });
-  }
-
-  const removeBtn = document.createElement('button');
-  removeBtn.className = 'chatlog-remove-btn';
-  removeBtn.textContent = '✕ Remove';
-  removeBtn.title = 'Dismiss this entry';
-  removeBtn.addEventListener('click', () => {
-    dismissedKeys.add(key);
-    chatRowCount = Math.max(0, chatRowCount - 1);
-    row.style.transition = 'opacity 0.2s';
-    row.style.opacity = '0';
-    setTimeout(() => {
-      row.remove();
-      // Update count label
-      const countEl = document.getElementById('chatlog-count');
-      const remaining = document.querySelectorAll('.chatlog-entry').length;
-      countEl.textContent = remaining ? `${remaining} result${remaining !== 1 ? 's' : ''}` : '';
-    }, 200);
-  });
-
-  btnGroup.appendChild(addBtn);
-  btnGroup.appendChild(removeBtn);
-
-  row.appendChild(meta);
-  row.appendChild(msgEl);
-  row.appendChild(btnGroup);
-  return row;
-}
-
-// Called each poll cycle with the full parsed match list.
-// Only appends rows that aren't already in the DOM — no flicker,
-// no scroll-position reset, "Added" state is preserved.
-function syncChatResults(matches) {
-  const container = document.getElementById('chatlog-results');
-  const countEl   = document.getElementById('chatlog-count');
-
-  // First load: replace placeholder with the result list container
-  let list = container.querySelector('.chatlog-list');
-  if (!list) {
-    if (matches.length === 0) {
-      countEl.textContent = '';
-      container.innerHTML = '<div class="chatlog-empty">No XX:MM event announcements found in this log yet.<br><span style="font-size:0.75em;opacity:0.6">Watching for new messages…</span></div>';
-      return;
-    }
-    container.innerHTML = '';
-    list = document.createElement('div');
-    list.className = 'chatlog-list';
-    container.appendChild(list);
-    chatRowCount = 0;
-  }
-
-  // Filter out entries the user has dismissed, then append only new rows
-  const visibleMatches = matches.filter(e => !dismissedKeys.has(matchKey(e)));
-  const newMatches = visibleMatches.slice(chatRowCount);
-  for (const entry of newMatches) {
-    list.appendChild(buildChatRow(entry));
-  }
-
-  chatRowCount = visibleMatches.length;
-  const total = visibleMatches.length;
-  countEl.textContent = total ? `${total} result${total !== 1 ? 's' : ''}` : '';
-}
-
-// Read the stored file and sync results; called on selection and every poll.
-// Browsers freeze File.size at pick-time so we can't use it as a change
-// signal — instead we re-read on every tick and let syncChatResults decide
-// if there's actually anything new to append (it's a no-op when unchanged).
-let chatReading = false;   // guard against overlapping FileReader calls
-
-function readChatFile() {
-  if (!chatFile || chatReading) return;
-  chatReading = true;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    chatReading = false;
-    const matches = parseChatLog(e.target.result);
-    syncChatResults(matches);
-  };
-  reader.onerror = function() {
-    chatReading = false;
-    // File read failed — silently retry next cycle
-  };
-  reader.readAsText(chatFile, 'UTF-8');
-}
-
-// Poll every 2 seconds — always re-read since File.size doesn't update
-function tickChatLog() {
-  if (!chatFile) return;
-  readChatFile();
-}
-setInterval(tickChatLog, 2000);
-
-// File picker wiring
-document.getElementById('chatlog-file-input').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-
-  // Store the file reference for live polling
-  chatFile     = file;
-  chatRowCount = 0;
-  addedKeys.clear();
-  dismissedKeys.clear();
-
-  // Clear any existing results
-  const container = document.getElementById('chatlog-results');
-  container.innerHTML = '';
-
-  document.getElementById('chatlog-filename').textContent = file.name;
-
-  // Immediate first read
-  readChatFile();
-
-  // Reset input so the same file triggers 'change' again if re-selected
-  this.value = '';
-});
-
 </script>
 </body>
 </html>
