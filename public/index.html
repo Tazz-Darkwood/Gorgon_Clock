@@ -509,6 +509,57 @@
       0%,100% { text-shadow: 0 0 8px  rgba(192,57,43,0.25); }
       50%      { text-shadow: 0 0 18px rgba(192,57,43,0.6), 0 0 35px rgba(139,26,26,0.2); }
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MOBILE OVERRIDES — only apply at narrow viewports.
+       Desktop layout above is unchanged.
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 640px) {
+      /* Tighter outer spacing — phones don't have room for 2rem padding */
+      .shell { padding: 1rem 0.6rem 2rem; gap: 0.9rem; }
+
+      /* Title scales down (already uses clamp, but pin it lower on phones) */
+      .title { font-size: 1.5rem; letter-spacing: 0.05em; }
+
+      /* Stack the two top panels (Local Time / Server Time) vertically */
+      .clock-grid { grid-template-columns: 1fr; gap: 0.55rem; }
+      .panel { padding: 0.7rem 1rem 0.85rem; }
+      .panel-value { font-size: 1.4rem; }
+
+      /* Schedule panel: tighter padding, stack the header */
+      .schedule-panel { padding: 0.9rem 0.8rem 1.2rem; }
+      .schedule-panel-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.4rem;
+      }
+
+      /* Hide the chime test buttons on mobile — they're for development
+         testing, not for users. Saves significant space. */
+      .chime-row { display: none; }
+
+      /* Filter button row sits flush left already; just trim margin */
+      .filter-row-wrap { margin-bottom: 0.3rem !important; }
+      .filter-panel { min-width: 200px; }
+
+      /* Schedule table: hide the two least-essential columns.
+         Bell toggles + Event + Gorgon Time + Time Until is the core info.
+         EST Time and Recurrence are derivable / less needed on the go. */
+      .schedule-table th.col-est,
+      .schedule-table td.td-est,
+      .schedule-table th.col-freq,
+      .schedule-table td.td-freq { display: none; }
+
+      /* Let remaining columns size themselves to content */
+      .schedule-table th,
+      .schedule-table td { padding: 0.45rem 0.3rem; font-size: 0.7rem; }
+      .schedule-table th:first-child { width: auto; padding-left: 0; }
+      .schedule-table th.col-gorgon,
+      .schedule-table th.col-countdown { width: auto; }
+
+      /* Bell icons in first column — keep them tappable but compact */
+      .td-name { font-size: 0.78rem; }
+    }
   </style>
 </head>
 <body>
