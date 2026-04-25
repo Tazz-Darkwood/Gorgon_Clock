@@ -1,2 +1,6 @@
-django>=4.2,<5.0
-tzdata>=2024.1   # required on Windows for zoneinfo; harmless on Linux/macOS
+Django>=4.2,<5.0
+gunicorn>=21.0
+uvicorn>=0.29.0
+whitenoise[brotli]>=6.6
+dj-database-url>=2.0
+tzdata>=2024.1
