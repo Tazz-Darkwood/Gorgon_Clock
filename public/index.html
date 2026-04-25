@@ -1927,7 +1927,6 @@ function highlightClockPattern(text) {
 
 // ── Chat log live-poll state ─────────────────────────────────────
 let chatFile        = null;   // the File object kept alive between polls
-let chatLastSize    = -1;     // last known file size; re-read when it grows
 let chatRowCount    = 0;      // how many result rows are already rendered
 let addedKeys       = new Set(); // unique keys for rows already "Added"
 let dismissedKeys   = new Set(); // unique keys for rows manually removed
@@ -2065,29 +2064,32 @@ function syncChatResults(matches) {
   countEl.textContent = total ? `${total} result${total !== 1 ? 's' : ''}` : '';
 }
 
-// Read the stored file and sync results; called on selection and every poll
+// Read the stored file and sync results; called on selection and every poll.
+// Browsers freeze File.size at pick-time so we can't use it as a change
+// signal — instead we re-read on every tick and let syncChatResults decide
+// if there's actually anything new to append (it's a no-op when unchanged).
+let chatReading = false;   // guard against overlapping FileReader calls
+
 function readChatFile() {
-  if (!chatFile) return;
+  if (!chatFile || chatReading) return;
+  chatReading = true;
   const reader = new FileReader();
   reader.onload = function(e) {
-    chatLastSize = chatFile.size;
+    chatReading = false;
     const matches = parseChatLog(e.target.result);
     syncChatResults(matches);
   };
   reader.onerror = function() {
+    chatReading = false;
     // File read failed — silently retry next cycle
   };
   reader.readAsText(chatFile, 'UTF-8');
 }
 
-// Poll every 2 seconds — only re-read if the file has grown
+// Poll every 2 seconds — always re-read since File.size doesn't update
 function tickChatLog() {
   if (!chatFile) return;
-  // File.size is always up-to-date even without re-selecting; browsers
-  // update it as the underlying file changes on disk.
-  if (chatFile.size !== chatLastSize) {
-    readChatFile();
-  }
+  readChatFile();
 }
 setInterval(tickChatLog, 2000);
 
@@ -2098,7 +2100,6 @@ document.getElementById('chatlog-file-input').addEventListener('change', functio
 
   // Store the file reference for live polling
   chatFile     = file;
-  chatLastSize = -1;   // force immediate read
   chatRowCount = 0;
   addedKeys.clear();
   dismissedKeys.clear();
