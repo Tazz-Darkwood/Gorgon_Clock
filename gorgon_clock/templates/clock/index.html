@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
   <title>Gorgon Clock</title>
+  <!--
+    THIRD-PARTY NOTICES
+    Cinzel & Spectral fonts: SIL Open Font Licence 1.1 via Google Fonts.
+    Web Audio synthesis: original code, no samples or copyrighted audio.
+    Bell SVG path: original geometry, not derived from any copyrighted work.
+    Event names (Elt Blood Event, SV Blood Event, Egg Run, Poetry Jam)
+    are used descriptively in a fan-made utility — no game assets copied.
+    No trademarks or logos belonging to Elder Game / Citan Munro are used.
+  -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
@@ -532,8 +543,23 @@
 
   <!-- ── Full Event Schedule ── -->
   <div class="schedule-panel">
-    <div class="schedule-panel-header">
+    <div class="schedule-panel-header" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0.6rem;border-bottom:1px solid var(--body-faint);margin-bottom:0.5rem;">
       <div class="section-label">Event Schedule &amp; Chime Alerts</div>
+      <div class="filter-wrap" id="filter-wrap">
+        <button class="filter-btn" id="filter-btn" onclick="toggleFilterPanel(event)">
+          Filter Events
+          <span class="filter-badge hidden-badge" id="filter-badge">0</span>
+          <span class="filter-arrow">&#9660;</span>
+        </button>
+        <div class="filter-panel" id="filter-panel">
+          <div class="filter-all-row">
+            <button class="filter-all-btn" onclick="setAllVisible(true,event)">Show all</button>
+            <button class="filter-all-btn" onclick="setAllVisible(false,event)">Hide all</button>
+          </div>
+          <div class="filter-divider"></div>
+          <div id="filter-list"><!-- injected by JS --></div>
+        </div>
+      </div>
       <div class="chime-row">
       <span class="chime-label">Test chimes:</span>
       <button class="chime-btn" onclick="playChime('warning15')">&#9658; Warning (15m)</button>
@@ -560,7 +586,7 @@
     </table>
   </div>
 
-  <div class="footer">Laethl's Chronicle &mdash; syncing every second</div>
+  <div class="footer">Fan Made Chronicle &mdash; syncing every second</div>
 
 </div><!-- .shell -->
 
@@ -570,6 +596,10 @@
 // ───────────────────────────────────────────────────────────────
 // To ADD an event:  push a new object into EVENTS below.
 // To REMOVE one:   delete or comment out its object.
+//
+// SECURITY NOTE: name, category, id, and display fields are inserted
+// directly into innerHTML. Keep them as plain text with no HTML or
+// quotes — they are developer-controlled constants, not user input.
 //
 // Fields:
 //   id          — unique string key (used for alert deduplication & storage)
@@ -928,12 +958,20 @@ function checkAlerts(estNow) {
 // ═══════════════════════════════════════════════════════════════
 
 function showToast(title, body, urgent) {
-  const c = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = 'toast' + (urgent ? ' urgent' : '');
-  t.innerHTML = `<div class="toast-title">${title}</div><div class="toast-body">${body}</div>`;
-  c.appendChild(t);
-  setTimeout(() => t.remove(), 5000);
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (urgent ? ' urgent' : '');
+  // Build with textContent to prevent any accidental HTML injection
+  const titleEl = document.createElement('div');
+  titleEl.className = 'toast-title';
+  titleEl.textContent = title;
+  const bodyEl = document.createElement('div');
+  bodyEl.className = 'toast-body';
+  bodyEl.textContent = body;
+  toast.appendChild(titleEl);
+  toast.appendChild(bodyEl);
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
 }
 
 // ═══════════════════════════════════════════════════════════════
