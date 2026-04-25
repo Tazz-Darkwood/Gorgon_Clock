@@ -305,15 +305,14 @@
 
     .chime-btn {
       font-family: 'Spectral', serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
+      font-size: 0.62rem;
+      letter-spacing: 0.05em;
       background: var(--panel-bg-deep);
       border: 1px solid var(--maroon-mid);
       color: var(--body-text);
-      padding: 0.45rem 1rem;
+      padding: 0.25rem 0.6rem;
       cursor: pointer;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
-      min-width: 7rem;
       text-align: center;
     }
     .chime-btn:hover { border-color: var(--amber); color: var(--amber); background: rgba(90,60,16,0.2); }
@@ -366,7 +365,7 @@
       display: none;
       position: absolute;
       top: calc(100% + 6px);
-      right: 0;
+      left: 0;
       min-width: 240px;
       background: var(--panel-bg);
       border: 1px solid var(--maroon-mid);
@@ -545,6 +544,16 @@
   <div class="schedule-panel">
     <div class="schedule-panel-header" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0.6rem;border-bottom:1px solid var(--body-faint);margin-bottom:0.5rem;">
       <div class="section-label">Event Schedule &amp; Chime Alerts</div>
+      <div class="chime-row">
+      <span class="chime-label">Test chimes:</span>
+      <button class="chime-btn" onclick="playChime('warning15')">&#9658; Warning (15m)</button>
+      <button class="chime-btn" onclick="playChime('warning10')">&#9658; Warning (10m)</button>
+      <button class="chime-btn" onclick="playChime('warning')">&#9658; Warning (5m)</button>
+      <button class="chime-btn" onclick="playChime('now')">&#9658; Now!</button>
+    </div>
+    </div>
+
+    <div class="filter-row-wrap" style="display:flex;justify-content:flex-start;margin-bottom:0.5rem;">
       <div class="filter-wrap" id="filter-wrap">
         <button class="filter-btn" id="filter-btn" onclick="toggleFilterPanel(event)">
           Filter Events
@@ -560,13 +569,6 @@
           <div id="filter-list"><!-- injected by JS --></div>
         </div>
       </div>
-      <div class="chime-row">
-      <span class="chime-label">Test chimes:</span>
-      <button class="chime-btn" onclick="playChime('warning15')">&#9658; Warning (15m)</button>
-      <button class="chime-btn" onclick="playChime('warning10')">&#9658; Warning (10m)</button>
-      <button class="chime-btn" onclick="playChime('warning')">&#9658; Warning (5m)</button>
-      <button class="chime-btn" onclick="playChime('now')">&#9658; Now!</button>
-    </div>
     </div>
 
     <table class="schedule-table">
@@ -686,31 +688,54 @@ function ctx() {
 }
 
 function strike(ac, freq, startTime, duration, gain) {
-  const osc  = ac.createOscillator();
-  const env  = ac.createGain();
+  // Cathedral-bell partial structure. A real bell has many partials;
+  // these are the five that define its character, plus one upper
+  // inharmonic for a touch of shimmer.
+  //   hum tone (octave below)  — long, warm undertone
+  //   strike tone (fundamental) — what the ear hears as "the note"
+  //   tierce (minor 3rd above)  — gives bells their pensive quality
+  //   quint  (perfect 5th above)
+  //   nominal (octave above)
+  //   upper inharmonic          — quick shimmer on the attack
+  const partials = [
+    { mult: 0.5,   gainMult: 0.55, decayMult: 1.4  },
+    { mult: 1.0,   gainMult: 1.0,  decayMult: 1.0  },
+    { mult: 1.2,   gainMult: 0.30, decayMult: 0.75 },
+    { mult: 1.5,   gainMult: 0.22, decayMult: 0.65 },
+    { mult: 2.0,   gainMult: 0.28, decayMult: 0.55 },
+    { mult: 2.756, gainMult: 0.06, decayMult: 0.30 },
+  ];
+
+  // Low-pass to roll off the bite. Real bells have very little energy
+  // above ~3kHz; the synth would otherwise sound glassy.
+  const filter = ac.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 2400;
+  filter.Q.value = 0.4;
+
   const comp = ac.createDynamicsCompressor();
-
-  // Add a detuned overtone for a bell-like timbre
-  const osc2 = ac.createOscillator();
-  const env2 = ac.createGain();
-
-  osc.type  = 'sine';  osc.frequency.value  = freq;
-  osc2.type = 'sine';  osc2.frequency.value = freq * 2.756; // inharmonic partial
-
-  env.gain.setValueAtTime(0, startTime);
-  env.gain.linearRampToValueAtTime(gain, startTime + 0.008);
-  env.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-  env2.gain.setValueAtTime(0, startTime);
-  env2.gain.linearRampToValueAtTime(gain * 0.3, startTime + 0.008);
-  env2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
-
-  osc.connect(env);   env.connect(comp);
-  osc2.connect(env2); env2.connect(comp);
+  filter.connect(comp);
   comp.connect(ac.destination);
 
-  osc.start(startTime);  osc.stop(startTime + duration);
-  osc2.start(startTime); osc2.stop(startTime + duration * 0.6);
+  for (const p of partials) {
+    const osc = ac.createOscillator();
+    const env = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq * p.mult;
+
+    const partialGain = gain * p.gainMult;
+    const partialDur  = duration * p.decayMult;
+
+    // Softer attack (22ms) — removes the percussive "tick"
+    env.gain.setValueAtTime(0, startTime);
+    env.gain.linearRampToValueAtTime(partialGain, startTime + 0.022);
+    env.gain.exponentialRampToValueAtTime(0.001, startTime + partialDur);
+
+    osc.connect(env);
+    env.connect(filter);
+    osc.start(startTime);
+    osc.stop(startTime + partialDur + 0.05);
+  }
 }
 
 function playChime(type) {
@@ -718,19 +743,20 @@ function playChime(type) {
   const t  = ac.currentTime + 0.05;
 
   if (type === 'warning') {
-    // Single soft bell at G5 — 5 min heads-up
-    strike(ac, 784, t, 2.2, 0.18);
+    // 5 min — single warm bell at G4 (392 Hz)
+    strike(ac, 392, t, 3.2, 0.11);
   } else if (type === 'warning10') {
-    // Two soft bells at E5 — 10 min heads-up (slightly lower/calmer)
-    strike(ac, 659, t,       2.0, 0.15);
-    strike(ac, 659, t + 0.4, 1.8, 0.12);
+    // 10 min — two soft bells at E4 (330 Hz)
+    strike(ac, 330, t,       2.8, 0.09);
+    strike(ac, 330, t + 0.55, 2.6, 0.075);
   } else if (type === 'warning15') {
-    // Single low bell at C5 — 15 min heads-up (earliest, most subtle)
-    strike(ac, 523, t, 2.5, 0.13);
+    // 15 min — single deep bell at C4 (262 Hz), most subtle
+    strike(ac, 262, t, 3.6, 0.085);
   } else {
-    // Two strikes at C5 and G5 — richer "now!" signal
-    strike(ac, 523, t,       3.0, 0.22);
-    strike(ac, 784, t + 0.5, 2.5, 0.18);
+    // now — descending perfect fifth, G4 → C4.
+    // Plagal/cathedral cadence; reads as "summoning" without being shrill.
+    strike(ac, 392, t,       3.2, 0.13);
+    strike(ac, 262, t + 0.65, 4.2, 0.13);
   }
 }
 
