@@ -863,9 +863,31 @@ const EVENTS = [
     oddHoursOnly: true,
     enabled:      true,
   },
+    {
+    id:           'day-egg-run',
+    name:         'Daytime Egg Run',
+    category:     'daily',
+    gorgonTime:   '-',           // approximate — egg run is real-time based
+    estDisplay:   '2:35 PM',
+    freq:         'Daily',
+    estMatch:     { hour: 14, minute: 35 },
+    evenHoursOnly: false,
+    enabled:      true,
+  },
   {
-    id:           'egg-run',
-    name:         'Egg Run',
+    id:           'day-after-run',
+    name:         'Daytime Egg Run Rewards',
+    category:     'daily',
+    gorgonTime:   '-',           // approximate — egg run is real-time based
+    estDisplay:   '3:45 PM',
+    freq:         'Daily',
+    estMatch:     { hour: 15, minute: 45 },
+    oddHoursOnly: false,
+    enabled:      true,
+  },
+  {
+    id:           'night-egg-run',
+    name:         'Night Egg Run',
     category:     'daily',
     gorgonTime:   '-',           // approximate — egg run is real-time based
     estDisplay:   '6:35 PM',
@@ -875,8 +897,8 @@ const EVENTS = [
     enabled:      true,
   },
   {
-    id:           'after-run',
-    name:         'Egg Run Rewards',
+    id:           'night-after-run',
+    name:         'Night Egg Run Rewards',
     category:     'daily',
     gorgonTime:   '-',           // approximate — egg run is real-time based
     estDisplay:   '7:45 PM',
