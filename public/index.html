@@ -207,6 +207,7 @@
     .cat-daily   { color: var(--event-amber); border-color: var(--amber-dim); }
     .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
     .cat-temp    { color: #6db3a8;            border-color: #3a6058; }
+    .cat-in-game { color: #b78de0;            border-color: #5a4a78; }
 
     /* ── Delete button for temp event rows ── */
     .temp-delete {
@@ -296,6 +297,11 @@
       font-family: 'Cinzel', serif;
       font-size: 0.92rem;
       color: var(--amber);
+    }
+    .td-gorgon.dim {
+      color: var(--body-faint);
+      opacity: 0.5;
+      font-style: italic;
     }
 
     .td-est {
@@ -707,7 +713,7 @@
           <th><span style="font-size:0.5rem;letter-spacing:0.08em;color:var(--body-dim)">15m&nbsp;10m&nbsp;5m&nbsp;Now</span></th>
           <th>Event</th>
           <th class="col-gorgon">Gorgon Time</th>
-          <th class="col-est">EST Time</th>
+          <th class="col-est">Event Time</th>
           <th class="col-freq">Recurrence</th>
           <th class="col-countdown">Time Until</th>
         </tr>
@@ -749,7 +755,7 @@
 // ── REQUIRED FIELDS ────────────────────────────────────────────
 //   id            unique string (used for alert dedup + saved settings)
 //   name          shown in the schedule table
-//   category      'daily' | 'special'  (controls badge color)
+//   category      'daily' | 'special' | 'in-game'  (controls badge color)
 //   gorgonTime    in-game clock display (e.g. '1:00 AM' or '—')
 //   estDisplay    EST time hint shown in the table
 //   freq          recurrence description shown in the table
@@ -833,7 +839,7 @@ const EVENTS = [
   {
     id:           'elt-blood',
     name:         'Elt Blood Event',
-    category:     'daily',
+    category:     'in-game',
     gorgonTime:   '1:00 AM',
     estDisplay:   'XX:05 (even hrs)',
     freq:         'Every two hours',
@@ -844,7 +850,7 @@ const EVENTS = [
   {
     id:           'sv-blood',
     name:         'SV Blood Event',
-    category:     'daily',
+    category:     'in-game',
     gorgonTime:   '3:00 AM',
     estDisplay:   'XX:15 (even hrs)',
     freq:         'Every two hours',
@@ -855,7 +861,7 @@ const EVENTS = [
   {
     id:           'povus',
     name:         'Povus Nightly Raid',
-    category:     'daily',
+    category:     'in-game',
     gorgonTime:   '8:00 PM',
     estDisplay:   'XX:40 (odd hrs)',
     freq:         'Every two hours',
@@ -1313,8 +1319,8 @@ function renderTable() {
         </div>
       </td>
       <td><div class="td-name">${ev.name} ${badge}${delBtn}</div></td>
-      <td class="td-gorgon">${ev.gorgonTime}</td>
-      <td class="td-est">${ev.estDisplay}</td>
+      <td class="td-gorgon${(ev.gorgonTime === '-' || ev.gorgonTime === '—') ? ' dim' : ''}">${ev.gorgonTime}</td>
+      <td class="td-est">${localEventDisplay(ev)}</td>
       <td class="td-freq">${ev.freq}</td>
       <td class="td-countdown normal" id="cd-${ev.id}">--:--</td>
     </tr>`;
@@ -1453,6 +1459,69 @@ function gorgonTimeStr() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// LOCAL EVENT TIME DISPLAY
+// Converts each event's firing pattern into a string showing when it
+// fires in the *viewer's* local timezone. For recurring events, shows
+// "XX:MM" with the local minute. For fixed events, shows the local
+// clock time (and date, where relevant).
+// ═══════════════════════════════════════════════════════════════
+
+function localEventDisplay(ev) {
+  const m = ev.estMatch || {};
+  const next = nextOccurrenceEST(ev, getEST());
+  if (!next) return '—';
+
+  // Recurring (no specific hour) — show "XX:MM" with the local minute,
+  // plus any parity note. For most viewers in whole-hour-offset zones
+  // this matches EST; some zones (India, Newfoundland) shift the minute.
+  if (m.hour === undefined && (ev.evenHoursOnly || ev.oddHoursOnly || m.minute !== undefined) && !ev.targetTimestamp) {
+    const localMin = next.getMinutes();
+    const minStr = String(localMin).padStart(2, '0');
+    const parityNote = ev.evenHoursOnly ? ' (even hrs)'
+                     : ev.oddHoursOnly  ? ' (odd hrs)'
+                     : '';
+    return `XX:${minStr}${parityNote}`;
+  }
+
+  // Fixed events — format the actual local time
+  const timeStr = next.toLocaleTimeString([], {
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  });
+
+  // Weekly events: prepend day-of-week
+  if (m.day !== undefined) {
+    const dayStr = next.toLocaleDateString([], { weekday: 'short' });
+    return `${dayStr} ${timeStr}`;
+  }
+
+  // Monthly events: prepend ordinal day-of-month
+  if (m.date !== undefined && m.month === undefined) {
+    return `${ordinal(m.date)} ${timeStr}`;
+  }
+
+  // Annual events: include month + date
+  if (m.month !== undefined && m.year === undefined) {
+    const dateStr = next.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return `${dateStr}, ${timeStr}`;
+  }
+
+  // One-time future events: include full date
+  if (m.year !== undefined) {
+    const dateStr = next.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${dateStr} — ${timeStr}`;
+  }
+
+  // Default: daily fixed event — just the time
+  return timeStr;
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN TICK
 // ═══════════════════════════════════════════════════════════════
 
@@ -1557,10 +1626,28 @@ function nextOccurrenceEST(ev, estNow) {
 function fmtCountdown(ms) {
   if (ms <= 0) return 'Now!';
   const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const min = Math.floor((totalSec % 3600) / 60);
-  const sec = totalSec % 60;
-  if (h > 0) return `${h}h ${String(min).padStart(2,'0')}m`;
+  const sec  = totalSec % 60;
+  const min  = Math.floor(totalSec / 60) % 60;
+  const hr   = Math.floor(totalSec / 3600) % 24;
+  const days = Math.floor(totalSec / 86400);
+
+  // For multi-month / multi-year spans we approximate (30d ≈ month, 365d ≈ yr).
+  // The actual firing time is computed exactly elsewhere — this is display only.
+  if (days >= 365) {
+    const yr  = Math.floor(days / 365);
+    const rem = days % 365;
+    const mo  = Math.floor(rem / 30);
+    return mo > 0 ? `${yr}y ${mo}mo` : `${yr}y`;
+  }
+  if (days >= 60) {
+    const mo  = Math.floor(days / 30);
+    const rem = days % 30;
+    return rem > 0 ? `${mo}mo ${rem}d` : `${mo}mo`;
+  }
+  if (days >= 1) {
+    return hr > 0 ? `${days}d ${hr}h` : `${days}d`;
+  }
+  if (hr > 0) return `${hr}h ${String(min).padStart(2,'0')}m`;
   return `${String(min).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
 }
 
@@ -1569,6 +1656,12 @@ function updateCountdowns(estNow) {
     const el = document.getElementById('cd-' + ev.id);
     if (!el) continue;
     const next = nextOccurrenceEST(ev, estNow);
+
+    // Keep the event-time cell fresh too — handles cases like a fixed
+    // 6pm event rolling from "today 6pm" to "tomorrow 6pm" after firing
+    const tdEst = el.parentElement.querySelector('.td-est');
+    if (tdEst) tdEst.textContent = localEventDisplay(ev);
+
     if (!next) { el.textContent = '—'; el.className = 'td-countdown normal'; continue; }
     const ms = next - estNow;
     el.textContent = fmtCountdown(ms);
