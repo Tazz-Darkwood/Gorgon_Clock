@@ -67,7 +67,24 @@ const Schedule = (() => {
     return startsAtUtc(slotId).getTime() - now.getTime();
   }
 
-  return { slotIdAt, startsAtUtc, nextSlotIn, EST_OFFSET_HOURS, SLOT_MS, SLOTS_PER_DAY };
+  /**
+   * @param {Date} now
+   * @param {string} slotId
+   * @returns {boolean}
+   */
+  function canStillBet(now, slotId) {
+    return now.getTime() < startsAtUtc(slotId).getTime();
+  }
+
+  /**
+   * @param {Date} d
+   * @returns {string} e.g. "2026-05-06"
+   */
+  function localESTDate(d) {
+    return _slotParts(d).date;
+  }
+
+  return { slotIdAt, startsAtUtc, nextSlotIn, canStillBet, localESTDate, EST_OFFSET_HOURS, SLOT_MS, SLOTS_PER_DAY };
 })();
 
 if (typeof window !== 'undefined') {

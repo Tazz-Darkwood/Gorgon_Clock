@@ -195,6 +195,28 @@
          '2026-05-06-001'
        ) === -60_000,
        '60s after slot start → -60000ms');
+
+    section('Schedule.canStillBet');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:35:59Z'), '2026-05-06-042') === true,
+       'before slot start → can still bet');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:36:00Z'), '2026-05-06-042') === false,
+       'at slot start → bets closed');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:36:01Z'), '2026-05-06-042') === false,
+       'after slot start → bets closed');
+
+    section('Schedule.localESTDate');
+
+    ok(Schedule.localESTDate(new Date('2026-05-06T05:00:00Z')) === '2026-05-06',
+       'midnight EST is 2026-05-06');
+
+    ok(Schedule.localESTDate(new Date('2026-05-07T04:59:00Z')) === '2026-05-06',
+       'one minute before EST midnight is still 2026-05-06');
+
+    ok(Schedule.localESTDate(new Date('2026-05-07T05:00:00Z')) === '2026-05-07',
+       'midnight EST rolls over to 2026-05-07');
   })();
 </script>
 
