@@ -105,7 +105,20 @@ const State = (() => {
     }
   }
 
-  return { load, save, SCHEMA_VERSION, HISTORY_CAP };
+  /**
+   * @param {GorgonState} state
+   * @param {Date} now
+   * @returns {boolean} whether a rollover happened
+   */
+  function checkDayRollover(state, now) {
+    const today = Schedule.localESTDate(now);
+    if (state.tips_day === today) return false;
+    state.tips_day = today;
+    state.voted_tips = {};
+    return true;
+  }
+
+  return { load, save, checkDayRollover, SCHEMA_VERSION, HISTORY_CAP };
 })();
 
 if (typeof window !== 'undefined') {

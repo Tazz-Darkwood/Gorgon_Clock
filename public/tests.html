@@ -251,6 +251,24 @@
     ok(reset.bankroll === 0, 'reset zeroes the bankroll');
 
     localStorage.removeItem('gorgon_clock_state');
+
+    section('State.checkDayRollover');
+
+    localStorage.removeItem('gorgon_clock_state');
+    const s1 = State.load();
+    s1.tips_day = '2026-05-06';
+    s1.voted_tips = { 'tip_a': 'upvoted', 'tip_b': 'removed' };
+    State.save(s1);
+
+    ok(State.checkDayRollover(s1, new Date('2026-05-06T10:00:00Z')) === false,
+       'same day → no rollover');
+
+    const rolled = State.checkDayRollover(s1, new Date('2026-05-07T05:00:00Z'));
+    ok(rolled === true, 'midnight EST tick triggers rollover');
+    ok(s1.tips_day === '2026-05-07', 'tips_day updated to new day');
+    ok(Object.keys(s1.voted_tips).length === 0, 'voted_tips wiped');
+
+    localStorage.removeItem('gorgon_clock_state');
   })();
 </script>
 
