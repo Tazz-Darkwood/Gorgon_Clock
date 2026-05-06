@@ -1,0 +1,13 @@
+{
+  "_v": 1,
+  "fighters": [
+    {"id": "Corrrak", "species": "Ranalon",        "style": "Fosulf martial style"},
+    {"id": "Dura",    "species": "Orc",            "style": "Sword and shield"},
+    {"id": "Gloz",    "species": "Goblin Bear",    "style": "Claws, rending"},
+    {"id": "Leo",     "species": "Rahu",           "style": "Natural claws and limbs"},
+    {"id": "Otis",    "species": "Ogre",           "style": "Bone-shattering"},
+    {"id": "Ushug",   "species": "Orc",            "style": "Staff fighter"},
+    {"id": "Vizlark", "species": "Psychic Mantis", "style": "Psychic powers"}
+  ],
+  "_TODO": "Verify completeness — wiki page truncated mid-Vizlark, may be more (TODO-2)"
+}
