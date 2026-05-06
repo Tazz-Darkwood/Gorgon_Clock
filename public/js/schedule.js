@@ -40,7 +40,34 @@ const Schedule = (() => {
     return `${date}-${String(slot).padStart(3, '0')}`;
   }
 
-  return { slotIdAt, EST_OFFSET_HOURS, SLOT_MS, SLOTS_PER_DAY };
+  /**
+   * @param {string} slotId
+   * @returns {Date}
+   */
+  function startsAtUtc(slotId) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})-(\d{1,3})$/.exec(slotId);
+    if (!m) throw new Error('Invalid slot id: ' + slotId);
+    const [, yy, mm, dd, slotStr] = m;
+    const slot = parseInt(slotStr, 10);
+    if (slot < 0 || slot >= SLOTS_PER_DAY) throw new Error('Slot out of range: ' + slot);
+    const startOfDayUtc = Date.UTC(
+      parseInt(yy, 10),
+      parseInt(mm, 10) - 1,
+      parseInt(dd, 10)
+    ) - EST_OFFSET_HOURS * 3600 * 1000;
+    return new Date(startOfDayUtc + slot * SLOT_MS);
+  }
+
+  /**
+   * @param {Date} now
+   * @param {string} slotId
+   * @returns {number} ms (signed)
+   */
+  function nextSlotIn(now, slotId) {
+    return startsAtUtc(slotId).getTime() - now.getTime();
+  }
+
+  return { slotIdAt, startsAtUtc, nextSlotIn, EST_OFFSET_HOURS, SLOT_MS, SLOTS_PER_DAY };
 })();
 
 if (typeof window !== 'undefined') {
