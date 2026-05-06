@@ -61,8 +61,56 @@
     window.__test = { ok, section, summary };
   </script>
 
-  <!-- Test files load here; each calls __test.section(...) then __test.ok(...) -->
-  <!-- Add: <script src="js/math.js"></script><script>...tests...</script> -->
+  <script src="js/math.js"></script>
+<script>
+  const { ok, section } = window.__test;
+
+  section('Math_.aggregateProbability');
+
+  ok(Math_.aggregateProbability([], 'Otis', 'Leo') === 0.5,
+     'empty tips → 50/50');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Otis', modifier_pct:10}], 'Otis', 'Leo'
+     ) === 0.6,
+     'fighter +10% applies to favored');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Leo', modifier_pct:10}], 'Otis', 'Leo'
+     ) === 0.4,
+     'fighter +10% on opponent reduces P(A)');
+
+  ok(Math_.aggregateProbability(
+       [
+         {type:'fighter', favored:'Otis', modifier_pct:5},
+         {type:'fighter', favored:'Otis', modifier_pct:3},
+         {type:'matchup', fighter_a:'Otis', fighter_b:'Leo', favored:'Otis', modifier_pct:10}
+       ], 'Otis', 'Leo'
+     ) === 0.68,
+     'tips stack additively (5+3+10 = +18%)');
+
+  ok(Math_.aggregateProbability(
+       [{type:'matchup', fighter_a:'Otis', fighter_b:'Vizlark', favored:'Otis', modifier_pct:30}],
+       'Otis', 'Leo'
+     ) === 0.5,
+     'matchup-specific tip ignored when fighters differ');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Otis', modifier_pct:200}], 'Otis', 'Leo'
+     ) === 0.99,
+     'clamps to 99% on absurd modifier');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Leo', modifier_pct:200}], 'Otis', 'Leo'
+     ) === 0.01,
+     'clamps to 1% on negative absurd');
+
+  ok(Math_.aggregateProbability(
+       [{type:'matchup', fighter_a:'Leo', fighter_b:'Otis', favored:'Otis', modifier_pct:10}],
+       'Otis', 'Leo'
+     ) === 0.6,
+     'matchup tip works regardless of fighter order in tip object');
+</script>
 
   <script>
     // Run summary at end after all test scripts have loaded
