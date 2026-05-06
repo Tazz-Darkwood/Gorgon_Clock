@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gorgon Clock — Tests</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #ddd; padding: 1rem; }
+    .pass { color: #4a7a2a; }
+    .fail { color: #c0392b; font-weight: bold; }
+    h2 { border-bottom: 1px solid #444; padding-bottom: 0.3rem; }
+    .summary { margin-top: 2rem; padding: 1rem; background: #222; }
+  </style>
+</head>
+<body>
+  <h1>Gorgon Clock — Test Runner</h1>
+  <p>Open this file in any browser. Each test logs ✓ (green) or ✗ (red).</p>
+
+  <div id="results"></div>
+
+  <script>
+    /** @type {{pass: number, fail: number, failures: string[]}} */
+    const stats = { pass: 0, fail: 0, failures: [] };
+    const results = document.getElementById('results');
+
+    /**
+     * @param {boolean} cond
+     * @param {string} name
+     */
+    function ok(cond, name) {
+      const div = document.createElement('div');
+      if (cond) {
+        stats.pass++;
+        div.className = 'pass';
+        div.textContent = '✓ ' + name;
+      } else {
+        stats.fail++;
+        stats.failures.push(name);
+        div.className = 'fail';
+        div.textContent = '✗ ' + name;
+      }
+      results.appendChild(div);
+    }
+
+    /** @param {string} title */
+    function section(title) {
+      const h = document.createElement('h2');
+      h.textContent = title;
+      results.appendChild(h);
+    }
+
+    function summary() {
+      const div = document.createElement('div');
+      div.className = 'summary';
+      div.innerHTML = `<strong>${stats.pass} passed / ${stats.fail} failed</strong>`;
+      if (stats.failures.length) {
+        div.innerHTML += '<br><br>Failures:<br>' + stats.failures.map(f => '• ' + f).join('<br>');
+      }
+      results.appendChild(div);
+    }
+
+    window.__test = { ok, section, summary };
+  </script>
+
+  <!-- Test files load here; each calls __test.section(...) then __test.ok(...) -->
+  <!-- Add: <script src="js/math.js"></script><script>...tests...</script> -->
+
+  <script>
+    // Run summary at end after all test scripts have loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      window.__test.summary();
+    });
+  </script>
+</body>
+</html>
