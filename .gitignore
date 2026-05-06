@@ -3,3 +3,5 @@ __pycache__
 Gorgon_Clock.code-workspace
 .code-workspace
 **/*Zone.Identifier
+.superpowers/
+data/cdn-snapshots/
