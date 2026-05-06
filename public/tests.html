@@ -138,6 +138,35 @@
      'extreme p still produces a positive bet');
 </script>
 
+<script src="js/schedule.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('Schedule.slotIdAt');
+
+    // Midnight EST is 05:00 UTC (EST is UTC-5, no DST per spec)
+    ok(Schedule.slotIdAt(new Date('2026-05-06T05:00:00Z')) === '2026-05-06-000',
+       'slot 0 = midnight EST');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-06T05:08:00Z')) === '2026-05-06-001',
+       'slot 1 = 8 minutes past midnight');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-06T10:36:00Z')) === '2026-05-06-042',
+       'slot 42 = 5h36m past midnight EST');
+
+    // Last slot of the day starts at 23:52 EST = 04:52 next-day UTC
+    ok(Schedule.slotIdAt(new Date('2026-05-07T04:52:00Z')) === '2026-05-06-179',
+       'slot 179 is the last of the previous EST day');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-07T05:00:00Z')) === '2026-05-07-000',
+       'midnight rolls over to next day slot 0');
+
+    // Just before midnight EST is still yesterday
+    ok(Schedule.slotIdAt(new Date('2026-05-07T04:59:59Z')) === '2026-05-06-179',
+       'one second before midnight EST is still yesterday');
+  })();
+</script>
+
   <script>
     // Run summary at end after all test scripts have loaded
     document.addEventListener('DOMContentLoaded', () => {
