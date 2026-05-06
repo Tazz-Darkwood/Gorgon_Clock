@@ -110,6 +110,32 @@
        'Otis', 'Leo'
      ) === 0.6,
      'matchup tip works regardless of fighter order in tip object');
+
+  section('Math_.kellyBet (b = 0.9)');
+
+  ok(Math_.kellyBet(0.5, 50000, 1.0) === 0,
+     'no edge at 50/50: don\'t bet');
+
+  ok(Math_.kellyBet(0.5263, 50000, 1.0) === 0,
+     'still no edge exactly at break-even (0.5263): don\'t bet');
+
+  ok(Math_.kellyBet(0.6, 50000, 1.0) === Math.round(50000 * (1.9 * 0.6 - 1) / 0.9),
+     'full Kelly at 60% probability');
+
+  ok(Math_.kellyBet(0.6, 50000, 0.5) === Math.round(50000 * 0.5 * (1.9 * 0.6 - 1) / 0.9),
+     'half-Kelly is exactly half of full');
+
+  ok(Math_.kellyBet(0.6, 50000, 0.25) === Math.round(50000 * 0.25 * (1.9 * 0.6 - 1) / 0.9),
+     'quarter-Kelly');
+
+  ok(Math_.kellyBet(0.6, 0, 1.0) === 0,
+     'zero bankroll → zero bet');
+
+  ok(Math_.kellyBet(0.6, -100, 1.0) === 0,
+     'negative bankroll → zero bet');
+
+  ok(Math_.kellyBet(0.99, 1000, 1.0) > 0,
+     'extreme p still produces a positive bet');
 </script>
 
   <script>

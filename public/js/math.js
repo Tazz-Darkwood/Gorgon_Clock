@@ -48,7 +48,27 @@ const Math_ = (() => {
     return Math.max(0.01, Math.min(0.99, p));
   }
 
-  return { aggregateProbability };
+  /**
+   * Kelly criterion bet sizing for the casino's fixed payout structure.
+   *
+   * Casino pays 2× minus 10% fee → net odds b = 0.9 (you risk W to net 0.9W).
+   * Kelly: f* = (b·p − q) / b = (1.9p − 1) / 0.9.
+   * If edge ≤ 0, returns 0 (the tool refuses negative-EV bets).
+   *
+   * @param {number} p - estimated win probability in [0, 1]
+   * @param {number} bankroll - current councils on hand
+   * @param {number} fraction - Kelly fraction, typically 1.0/0.5/0.25
+   * @returns {number} recommended bet rounded to the nearest integer council
+   */
+  function kellyBet(p, bankroll, fraction) {
+    if (bankroll <= 0) return 0;
+    const edge = 1.9 * p - 1;
+    if (edge <= 0) return 0;
+    const fStar = edge / 0.9;
+    return Math.round(bankroll * fStar * fraction);
+  }
+
+  return { aggregateProbability, kellyBet };
 })();
 
 // Expose for browser
