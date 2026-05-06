@@ -220,6 +220,40 @@
   })();
 </script>
 
+<script src="js/state.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('State.load / State.save');
+
+    localStorage.removeItem('gorgon_clock_state');
+
+    const fresh = State.load();
+    ok(fresh._v === 1, 'fresh load has _v = 1');
+    ok(fresh.tips_day !== undefined, 'fresh load has tips_day');
+    ok(fresh.bankroll === 0, 'fresh bankroll is 0');
+    ok(fresh.kelly_fraction === 'half', 'default kelly_fraction is half');
+    ok(typeof fresh.user_id === 'string' && fresh.user_id.startsWith('u_'),
+       'fresh load generates user_id starting with u_');
+    ok(Array.isArray(fresh.history), 'history is an array');
+    ok(typeof fresh.voted_slots === 'object', 'voted_slots is object');
+    ok(typeof fresh.voted_tips === 'object', 'voted_tips is object');
+
+    fresh.bankroll = 12345;
+    State.save(fresh);
+    const reloaded = State.load();
+    ok(reloaded.bankroll === 12345, 'save and reload round-trips');
+    ok(reloaded.user_id === fresh.user_id, 'user_id stable across saves');
+
+    localStorage.setItem('gorgon_clock_state', JSON.stringify({ _v: 99, bankroll: 999 }));
+    const reset = State.load();
+    ok(reset._v === 1, 'stale schema version triggers reset');
+    ok(reset.bankroll === 0, 'reset zeroes the bankroll');
+
+    localStorage.removeItem('gorgon_clock_state');
+  })();
+</script>
+
   <script>
     // Run summary at end after all test scripts have loaded
     document.addEventListener('DOMContentLoaded', () => {
