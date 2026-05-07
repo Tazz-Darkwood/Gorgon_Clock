@@ -272,6 +272,28 @@
   })();
 </script>
 
+  <script src="js/api.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('Api smoke (offline → graceful failure)');
+
+    /** @type {any} */ (window).GORGON_API_BASE = 'http://127.0.0.1:1';
+
+    Api.getState('2026-05-06-042', '2026-05-06').then(r => {
+      ok(!r.ok, 'getState returns ok:false on network error');
+      ok(r.status === 0, 'network error has status 0');
+    });
+
+    Api.postMatchup('2026-05-06-042', {
+      user_id: 'u_test12345678', action: 'create',
+      fighter_a: 'Otis', fighter_b: 'Leo'
+    }).then(r => {
+      ok(!r.ok, 'postMatchup returns ok:false on network error');
+    });
+  })();
+</script>
+
   <script>
     // Run summary at end after all test scripts have loaded
     document.addEventListener('DOMContentLoaded', () => {
