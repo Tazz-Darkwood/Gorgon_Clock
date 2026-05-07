@@ -992,6 +992,22 @@ const EVENTS = [
     enabled:      true,
   },
 
+  // ── Casino Arena ──
+  // TODO(v2): chime wiring deferred — matchesEST() doesn't yet handle
+  // `every_n_minutes` matchers, so this event appears in the schedule
+  // table but won't fire warning/now chimes. Extend matchesEST() to add
+  // an `every_n_minutes` + `anchor_minute` branch when wiring chimes.
+  {
+    id:           'arena-fight',
+    name:         'Arena Fight',
+    category:     'casino',
+    gorgonTime:   '—',
+    estDisplay:   'every 8 min from midnight EST',
+    freq:         'Every 8 minutes',
+    estMatch:     { every_n_minutes: 8, anchor_minute: 0 },
+    enabled:      true,
+  },
+
 ];
 
 // ═══════════════════════════════════════════════════════════════
