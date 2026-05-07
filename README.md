@@ -37,3 +37,25 @@ npm test       # Vitest suite
 ## License
 
 MIT — see `LICENSE`.
+
+## Deployment
+
+The static site is auto-deployed by GitHub Pages from `public/` on every push to `main`.
+
+The Cloudflare Worker is auto-deployed by `.github/workflows/deploy-worker.yml`. This requires
+two repository secrets to be set:
+
+- `CLOUDFLARE_API_TOKEN` — token with **Workers Scripts: Edit** + **Workers KV Storage: Edit** scopes
+- `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID (visible in dashboard URL)
+
+Before the first deploy:
+
+1. In Cloudflare dashboard, create a KV namespace named `STATE` for production
+   and `STATE_PREVIEW` for preview. Copy each namespace's ID.
+2. Update `worker/wrangler.toml`'s `[[kv_namespaces]]` block: replace
+   `PLACEHOLDER_REPLACE_WITH_REAL_KV_ID` with the production ID and
+   `PLACEHOLDER_REPLACE_WITH_REAL_PREVIEW_ID` with the preview ID.
+3. After first deploy, the Worker URL is `https://gorgon-arena.<your-subdomain>.workers.dev`.
+   Update the hardcoded URL in `public/arena.html` (CSP `connect-src`) and
+   `public/js/api.js` (`_base()` function) and `public/index.html` (CSP + arena panel script)
+   if your subdomain differs from `gorgon-arena.workers.dev`.
