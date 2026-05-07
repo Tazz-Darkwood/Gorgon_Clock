@@ -936,6 +936,11 @@ None of these block implementation; all are content questions resolvable during 
 - Leveling pathfinder
 - Item source explorer
 - Chat-log integration via FSA
+- **FiteClub chat-channel parser** — players sometimes share tips via the `FiteClub` chat channel using a compact format. v2 candidate for a paste-or-import flow that pre-fills the TipForm:
+  - Per-fighter line: `<initial> <±N>%` optionally with `(<note>)` — regex `/^([A-Z])\s+([+-]?\d+)%(?:\s*\(([^)]*)\))?/`
+  - Matchup line: `<initial>><initial> +N%` — regex `/^([A-Z])>([A-Z])\s+([+-]?\d+)%/`
+  - Multiple tips per message; cancellations done by re-posting inverse sign.
+  - Fighter initials are currently unique (C/D/G/L/O/U/V) so single-letter mapping is unambiguous; revisit if a new fighter collides.
 - Wiki extraction layer for monster drops
 - Gardening / cheese box / mushroom box / boss respawn timers
 - Real-time push (WebSockets)
