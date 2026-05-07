@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://gorgon-arena.workers.dev http://localhost:8787; img-src 'self' data:; object-src 'none'; base-uri 'self';" />
+  <title>Arena Copilot — Gorgon Clock</title>
+  <meta name="description" content="Red Wing Casino arena betting copilot for Project Gorgon — aggregate Hot Tips, compute win probability, recommend Kelly-criterion bets." />
+  <meta property="og:title" content="Gorgon Clock — Arena Copilot" />
+  <meta property="og:description" content="Aggregate Hot Tips, compute win probability, place smarter bets at the Red Wing Casino." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0806; --panel-bg: #100d08; --panel-bg-deep: #0c0a06;
+      --maroon: #5c1a10; --maroon-mid: #7a2215; --maroon-bright: #9b2d1a;
+      --amber: #c8780a; --amber-bright: #e08c14; --amber-dim: #7a4808;
+      --body-text: #d8cfc0; --body-dim: #bead92; --body-faint: #3a3228;
+      --green: #4a7a2a; --red: #c0392b;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--body-text); font-family: 'Spectral', Georgia, serif; }
+    body { padding: 1rem 1.5rem 3rem; max-width: 980px; margin: 0 auto; }
+    h1.title { font-family: 'Cinzel', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; letter-spacing: 0.1em; color: var(--amber-bright); text-align: center; padding: 0.6rem 0; }
+    .subtitle { text-align: center; font-size: 0.78rem; color: var(--amber-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+    .rule { border-top: 1px solid var(--maroon); margin: 0.8rem 0 1.2rem; }
+    .countdown { text-align: center; padding: 1rem; border: 1px solid var(--maroon); background: var(--panel-bg-deep); margin-bottom: 1.2rem; }
+    .countdown .label { font-size: 0.7rem; color: var(--amber-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+    .countdown .value { font-family: monospace; font-size: 2.4rem; color: var(--amber-bright); padding: 0.2rem 0; }
+    .countdown .meta { font-size: 0.85rem; color: var(--body-dim); }
+    .grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1rem; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    .panel { border: 1px solid var(--body-faint); background: var(--panel-bg-deep); padding: 0.9rem; }
+    .panel.right { border-color: var(--maroon); }
+    .panel-title { font-family: 'Cinzel', serif; color: var(--amber); font-size: 0.92rem; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .footer { text-align: center; color: var(--body-faint); font-size: 0.7rem; padding: 1.2rem 0 0.4rem; }
+    .footer a { color: var(--amber-dim); }
+    .banner { padding: 0.5rem; margin-bottom: 0.8rem; background: rgba(192,57,43,0.1); border: 1px solid var(--red); color: var(--body-dim); font-size: 0.85rem; display: none; }
+    .banner.visible { display: block; }
+  </style>
+</head>
+<body>
+  <h1 class="title">ARENA COPILOT</h1>
+  <div class="subtitle">Red Wing Casino · Betting Assistant</div>
+  <div class="rule"></div>
+
+  <div id="banner" class="banner" role="status" aria-live="polite"></div>
+
+  <div class="countdown" id="countdown">
+    <div class="label">Next Fight In</div>
+    <div class="value" id="countdown-value">--:--</div>
+    <div class="meta" id="countdown-meta">slot · starts at ·</div>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="tips-title">
+      <div id="tips-title" class="panel-title">Today's Hot Tips</div>
+      <div id="tips-container"></div>
+    </section>
+    <section class="panel right" aria-labelledby="matchup-title">
+      <div id="matchup-title" class="panel-title">Current Matchup</div>
+      <div id="matchup-container"></div>
+      <div id="kelly-container"></div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:1rem;" aria-labelledby="history-title">
+    <div id="history-title" class="panel-title">Recent History</div>
+    <div id="history-container"></div>
+  </section>
+
+  <div class="footer">
+    Fan Made Chronicle — not affiliated with Elder Game / Project Gorgon.
+    <a href="privacy.html">Privacy</a> · <a href="index.html">← Home</a>
+  </div>
+
+  <script src="js/schedule.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/math.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/tip-form.js"></script>
+  <script src="js/matchup-picker.js"></script>
+  <script src="js/kelly-display.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
