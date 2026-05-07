@@ -39,3 +39,7 @@ Run this checklist before merging anything that touches `public/arena.html`,
 - [ ] Keyboard-only nav reaches all interactive elements
 - [ ] Screen reader announces ARIA labels on icon buttons
 - [ ] Color contrast passes WCAG AA (sample with Chrome devtools)
+
+## Outstanding asset TODOs
+
+- [ ] Generate `public/favicon.ico` from `public/icon.svg` for older browsers (use any online SVG-to-ICO converter).
