@@ -645,6 +645,57 @@
       .td-name { font-size: 0.78rem; }
     }
 
+    /* ── Arena Home Panel ── */
+    .arena-home-panel {
+      border: 1px solid var(--maroon);
+      background: linear-gradient(180deg, var(--panel-bg), var(--panel-bg-deep));
+      padding: 0.8rem 1rem;
+      margin: 0.6rem auto 1rem;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .arena-home-panel .label {
+      font-family: 'Cinzel', serif;
+      color: var(--amber);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+    }
+    .arena-home-panel .countdown {
+      color: var(--body-text);
+      font-size: 1rem;
+      margin-top: 0.25rem;
+    }
+    .arena-home-panel .countdown .v {
+      color: var(--amber-bright);
+      font-weight: bold;
+      font-family: monospace;
+    }
+    .arena-home-panel .countdown .meta {
+      color: var(--amber-dim);
+      font-size: 0.78rem;
+    }
+    .arena-home-panel .matchup {
+      color: var(--body-dim);
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+    .arena-home-panel .matchup .dot { color: var(--green); }
+    .arena-home-panel .open-btn {
+      background: var(--maroon);
+      color: var(--amber-bright);
+      border: 1px solid var(--maroon-bright);
+      padding: 0.5rem 1rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .arena-home-panel .open-btn:hover { background: var(--maroon-mid); }
+
   </style>
 </head>
 <body>
@@ -673,6 +724,20 @@
     </div>
   </div>
 
+  <!-- ── Arena Copilot quick panel ── -->
+  <div class="arena-home-panel" id="arena-home-panel">
+    <div>
+      <div class="label">RED WING ARENA</div>
+      <div class="countdown">
+        Next fight in <span class="v" id="arena-countdown">--:--</span>
+        <span class="meta" id="arena-slot-meta"></span>
+      </div>
+      <div class="matchup" id="arena-matchup">
+        <span class="dot">●</span> <span id="arena-matchup-text">No matchup entered yet</span>
+      </div>
+    </div>
+    <a class="open-btn" href="arena.html" aria-label="Open Arena Copilot">OPEN ARENA →</a>
+  </div>
 
   <div class="section-rule"></div>
 
