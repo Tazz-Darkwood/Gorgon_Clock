@@ -79,14 +79,23 @@ export async function createOrVote(
     if (body.fighter_a === body.fighter_b) {
       throw new Error('fighter_a must differ from fighter_b');
     }
+    // Canonicalize the pair: a real fight is order-independent, so we store
+    // names in lex order and dedup-merge a "create" onto any existing entry
+    // for the same unordered pair.
+    const [a, b] = [body.fighter_a, body.fighter_b].sort();
     removeUserFromAllEntries(slot, body.user_id);
-    slot.entries.push({
-      id: newEntryId(),
-      fighter_a: body.fighter_a,
-      fighter_b: body.fighter_b,
-      first_at: new Date().toISOString(),
-      voter_ids: [body.user_id]
-    });
+    const existing = slot.entries.find(e => e.fighter_a === a && e.fighter_b === b);
+    if (existing) {
+      existing.voter_ids.push(body.user_id);
+    } else {
+      slot.entries.push({
+        id: newEntryId(),
+        fighter_a: a,
+        fighter_b: b,
+        first_at: new Date().toISOString(),
+        voter_ids: [body.user_id]
+      });
+    }
     await saveSlot(kv, slot);
     return slot;
   }

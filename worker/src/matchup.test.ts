@@ -17,6 +17,14 @@ describe('matchup', () => {
     expect(result.slot_id).toBe(slot);
   });
 
+  function pairOf(e: { fighter_a: string; fighter_b: string }) {
+    return [e.fighter_a, e.fighter_b].sort().join('|');
+  }
+  function findByPair(entries: Array<{fighter_a:string;fighter_b:string;voter_ids:string[];id:string}>, x: string, y: string) {
+    const want = [x, y].sort().join('|');
+    return entries.find(e => pairOf(e) === want)!;
+  }
+
   it('creates entry on first submission', async () => {
     const slot = '2026-05-06-101';
     await reset(slot);
@@ -26,8 +34,23 @@ describe('matchup', () => {
       fighter_a: 'Otis', fighter_b: 'Leo'
     }, FIGHTERS);
     expect(r.entries.length).toBe(1);
-    expect(r.entries[0].fighter_a).toBe('Otis');
+    expect(pairOf(r.entries[0])).toBe('Leo|Otis');
     expect(r.entries[0].voter_ids).toEqual(['u_aaa111aaa111']);
+  });
+
+  it('canonicalizes pair: reversed-order create dedups onto existing entry', async () => {
+    const slot = '2026-05-06-106';
+    await reset(slot);
+    await createOrVote(env.STATE, slot, {
+      user_id: 'u_aaa111aaa111', action: 'create',
+      fighter_a: 'Otis', fighter_b: 'Leo'
+    }, FIGHTERS);
+    const r = await createOrVote(env.STATE, slot, {
+      user_id: 'u_bbb222bbb222', action: 'create',
+      fighter_a: 'Leo', fighter_b: 'Otis'   // reversed order
+    }, FIGHTERS);
+    expect(r.entries.length).toBe(1);
+    expect(r.entries[0].voter_ids).toEqual(['u_aaa111aaa111', 'u_bbb222bbb222']);
   });
 
   it('vote action moves user from one entry to another', async () => {
@@ -41,12 +64,13 @@ describe('matchup', () => {
       user_id: 'u_bbb222bbb222', action: 'create',
       fighter_a: 'Otis', fighter_b: 'Vizlark'
     }, FIGHTERS);
+    const otisVizlarkBefore = findByPair(c2.entries, 'Otis', 'Vizlark');
     const v = await createOrVote(env.STATE, slot, {
       user_id: 'u_aaa111aaa111', action: 'vote',
-      entry_id: c2.entries[1].id
+      entry_id: otisVizlarkBefore.id
     }, FIGHTERS);
-    const otisLeo = v.entries.find(e => e.fighter_b === 'Leo')!;
-    const otisVizlark = v.entries.find(e => e.fighter_b === 'Vizlark')!;
+    const otisLeo = findByPair(v.entries, 'Otis', 'Leo');
+    const otisVizlark = findByPair(v.entries, 'Otis', 'Vizlark');
     expect(otisLeo.voter_ids).toEqual([]);
     expect(otisVizlark.voter_ids).toContain('u_aaa111aaa111');
     expect(otisVizlark.voter_ids).toContain('u_bbb222bbb222');
