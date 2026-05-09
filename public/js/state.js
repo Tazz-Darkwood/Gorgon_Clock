@@ -47,7 +47,7 @@ const State = (() => {
       user_id: _newUserId(),
       tips_day: Schedule.localESTDate(new Date()),
       bankroll: 0,
-      kelly_fraction: 'half',
+      kelly_fraction: 'full',
       voted_slots: {},
       voted_tips: {},
       history: []
@@ -82,7 +82,7 @@ const State = (() => {
       tips_day: typeof parsed.tips_day === 'string' ? parsed.tips_day : fresh.tips_day,
       bankroll: typeof parsed.bankroll === 'number' ? parsed.bankroll : 0,
       kelly_fraction: ['full','half','quarter'].includes(parsed.kelly_fraction)
-        ? parsed.kelly_fraction : 'half',
+        ? parsed.kelly_fraction : 'full',
       voted_slots: parsed.voted_slots && typeof parsed.voted_slots === 'object'
         ? parsed.voted_slots : {},
       voted_tips: parsed.voted_tips && typeof parsed.voted_tips === 'object'

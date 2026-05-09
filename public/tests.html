@@ -232,7 +232,7 @@
     ok(fresh._v === 1, 'fresh load has _v = 1');
     ok(fresh.tips_day !== undefined, 'fresh load has tips_day');
     ok(fresh.bankroll === 0, 'fresh bankroll is 0');
-    ok(fresh.kelly_fraction === 'half', 'default kelly_fraction is half');
+    ok(fresh.kelly_fraction === 'full', 'default kelly_fraction is full');
     ok(typeof fresh.user_id === 'string' && fresh.user_id.startsWith('u_'),
        'fresh load generates user_id starting with u_');
     ok(Array.isArray(fresh.history), 'history is an array');
