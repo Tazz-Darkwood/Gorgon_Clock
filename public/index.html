@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://orgon--lock.steven-bayiates.workers.dev http://localhost:8787; img-src 'self' data:; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="no-referrer" />
   <title>Gorgon Clock</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <meta name="description" content="Real-time clock and event tracker for the MMO Project: Gorgon. Translates real time into in-game time with chime alerts." />
+  <meta property="og:title" content="Gorgon Clock" />
+  <meta property="og:description" content="Real-time clock and event tracker for Project: Gorgon." />
+  <meta property="og:type" content="website" />
   <!--
     THIRD-PARTY NOTICES
     Cinzel & Spectral fonts: SIL Open Font Licence 1.1 via Google Fonts.
@@ -208,6 +213,7 @@
     .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
     .cat-temp    { color: #6db3a8;            border-color: #3a6058; }
     .cat-in-game { color: #b78de0;            border-color: #5a4a78; }
+    .cat-casino  { color: var(--event-red);   border-color: var(--maroon-bright); }
 
     /* ── Delete button for temp event rows ── */
     .temp-delete {
@@ -645,6 +651,57 @@
       .td-name { font-size: 0.78rem; }
     }
 
+    /* ── Arena Home Panel ── */
+    .arena-home-panel {
+      border: 1px solid var(--maroon);
+      background: linear-gradient(180deg, var(--panel-bg), var(--panel-bg-deep));
+      padding: 0.8rem 1rem;
+      margin: 0.6rem auto 1rem;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .arena-home-panel .label {
+      font-family: 'Cinzel', serif;
+      color: var(--amber);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+    }
+    .arena-home-panel .countdown {
+      color: var(--body-text);
+      font-size: 1rem;
+      margin-top: 0.25rem;
+    }
+    .arena-home-panel .countdown .v {
+      color: var(--amber-bright);
+      font-weight: bold;
+      font-family: monospace;
+    }
+    .arena-home-panel .countdown .meta {
+      color: var(--amber-dim);
+      font-size: 0.78rem;
+    }
+    .arena-home-panel .matchup {
+      color: var(--body-dim);
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+    .arena-home-panel .matchup .dot { color: var(--green); }
+    .arena-home-panel .open-btn {
+      background: var(--maroon);
+      color: var(--amber-bright);
+      border: 1px solid var(--maroon-bright);
+      padding: 0.5rem 1rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .arena-home-panel .open-btn:hover { background: var(--maroon-mid); }
+
   </style>
 </head>
 <body>
@@ -673,6 +730,20 @@
     </div>
   </div>
 
+  <!-- ── Arena Copilot quick panel ── -->
+  <div class="arena-home-panel" id="arena-home-panel">
+    <div>
+      <div class="label">RED WING ARENA</div>
+      <div class="countdown">
+        Next fight in <span class="v" id="arena-countdown">--:--</span>
+        <span class="meta" id="arena-slot-meta"></span>
+      </div>
+      <div class="matchup" id="arena-matchup">
+        <span class="dot">●</span> <span id="arena-matchup-text">No matchup entered yet</span>
+      </div>
+    </div>
+    <a class="open-btn" href="arena.html" aria-label="Open Arena Copilot">OPEN ARENA →</a>
+  </div>
 
   <div class="section-rule"></div>
 
@@ -924,6 +995,22 @@ const EVENTS = [
     freq:         'Every Saturday',
     estMatch:     { day: 6, hour: 14, minute: 0 },
     evenHoursOnly: false,
+    enabled:      true,
+  },
+
+  // ── Casino Arena ──
+  // TODO(v2): chime wiring deferred — matchesEST() doesn't yet handle
+  // `every_n_minutes` matchers, so this event appears in the schedule
+  // table but won't fire warning/now chimes. Extend matchesEST() to add
+  // an `every_n_minutes` + `anchor_minute` branch when wiring chimes.
+  {
+    id:           'arena-fight',
+    name:         'Arena Fight',
+    category:     'casino',
+    gorgonTime:   '—',
+    estDisplay:   'every 8 min from midnight EST',
+    freq:         'Every 8 minutes',
+    estMatch:     { every_n_minutes: 8, anchor_minute: 0 },
     enabled:      true,
   },
 
@@ -1739,6 +1826,94 @@ tick();
 function tickCountdowns() { updateCountdowns(getEST()); }
 setInterval(tickCountdowns, 1000);
 tickCountdowns();
+
+// ── Arena Copilot home panel wiring ──
+(function() {
+  const cdEl = document.getElementById('arena-countdown');
+  const metaEl = document.getElementById('arena-slot-meta');
+  const matchupEl = document.getElementById('arena-matchup-text');
+  if (!cdEl) return;
+
+  // Schedule helpers (inline duplicate to avoid loading the full schedule.js here)
+  const EST_OFFSET_HOURS = -5;
+  const SLOT_MS = 8 * 60 * 1000;
+  function slotIdAt(d) {
+    const shifted = new Date(d.getTime() + EST_OFFSET_HOURS * 3600 * 1000);
+    const y = shifted.getUTCFullYear();
+    const m = shifted.getUTCMonth() + 1;
+    const day = shifted.getUTCDate();
+    const startOfDay = Date.UTC(y, m - 1, day);
+    const slot = Math.floor((shifted.getTime() - startOfDay) / SLOT_MS);
+    return y.toString().padStart(4,'0') + '-' + m.toString().padStart(2,'0') + '-' + day.toString().padStart(2,'0') + '-' + slot.toString().padStart(3,'0');
+  }
+  function startsAtUtc(slotId) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})-(\d{1,3})$/.exec(slotId);
+    const slot = parseInt(m[4], 10);
+    const startOfDay = Date.UTC(+m[1], +m[2]-1, +m[3]) - EST_OFFSET_HOURS * 3600 * 1000;
+    return new Date(startOfDay + slot * SLOT_MS);
+  }
+  function localESTDate(d) {
+    const shifted = new Date(d.getTime() + EST_OFFSET_HOURS * 3600 * 1000);
+    return shifted.getUTCFullYear() + '-' + String(shifted.getUTCMonth()+1).padStart(2,'0') + '-' + String(shifted.getUTCDate()).padStart(2,'0');
+  }
+
+  const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:8787'
+    : 'https://orgon--lock.steven-bayiates.workers.dev';
+
+  let lastPollAt = 0;
+  let latestMatchup = '';
+
+  async function poll() {
+    const now = new Date();
+    const slotId = slotIdAt(now);
+    const day = localESTDate(now);
+    try {
+      const r = await fetch(API_BASE + '/v1/state?slot=' + slotId + '&day=' + day);
+      if (!r.ok) throw new Error('non-OK');
+      const data = await r.json();
+      const entries = (data.slot && data.slot.entries) || [];
+      if (entries.length === 0) {
+        latestMatchup = 'No matchup entered yet';
+      } else {
+        const top = entries.slice().sort((a, b) => b.voter_ids.length - a.voter_ids.length)[0];
+        latestMatchup = entries.length === 1
+          ? top.fighter_a + ' vs ' + top.fighter_b + ' · ' + top.voter_ids.length + ' vote' + (top.voter_ids.length===1?'':'s')
+          : entries.length + ' competing entries — open arena to vote';
+      }
+    } catch (e) {
+      latestMatchup = 'Shared state unreachable';
+    }
+  }
+
+  function tick() {
+    const now = new Date();
+    const slotId = slotIdAt(now);
+    // startsAtUtc returns the *current* slot's start (in the past). For the countdown
+    // we want the next slot's start, which is +SLOT_MS later.
+    const nextStart = new Date(startsAtUtc(slotId).getTime() + SLOT_MS);
+    const ms = nextStart.getTime() - now.getTime();
+    if (ms > 0) {
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      cdEl.textContent = m + ':' + s.toString().padStart(2,'0');
+    } else {
+      cdEl.textContent = 'fight in progress';
+    }
+    metaEl.textContent = ' · slot #' + slotId.slice(-3) + ' · ' + nextStart.toUTCString().slice(17,22) + ' UTC';
+    matchupEl.textContent = latestMatchup;
+
+    const interval = (ms > 0 && ms < 60_000) ? 10_000 : 30_000;
+    if (now.getTime() - lastPollAt > interval) {
+      lastPollAt = now.getTime();
+      poll();
+    }
+  }
+
+  poll();
+  setInterval(tick, 1000);
+  tick();
+})();
 </script>
 </body>
 </html>
