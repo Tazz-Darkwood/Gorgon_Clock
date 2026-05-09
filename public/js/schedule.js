@@ -10,7 +10,7 @@
 const Schedule = (() => {
   const EST_OFFSET_HOURS = -5;
   const SLOT_MS = 10 * 60 * 1000;
-  const SLOTS_PER_DAY = 180;
+  const SLOTS_PER_DAY = 144;
 
   /**
    * Convert a UTC Date to {date, slot} aligned to EST midnight.
