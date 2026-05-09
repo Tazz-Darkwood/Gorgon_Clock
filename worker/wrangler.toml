@@ -1,0 +1,23 @@
+name = "gorgon-arena"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "STATE"
+id = "PLACEHOLDER_REPLACE_WITH_REAL_KV_ID"
+preview_id = "PLACEHOLDER_REPLACE_WITH_REAL_PREVIEW_ID"
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:8000,https://spearw.github.io"
+KNOWN_FIGHTERS  = "Corrrak,Dura,Gloz,Leo,Otis,Ushug,Vizlark"
+KNOWN_TIP_NPCS  = "Mandibles,Qatik,Irkima,Eveline_Rastin,Arianna_Fangblade"
+
+[[env.test.kv_namespaces]]
+binding = "STATE"
+id = "PLACEHOLDER_TEST_KV_ID"
+
+[env.test.vars]
+ALLOWED_ORIGINS = "http://localhost"
+KNOWN_FIGHTERS  = "Corrrak,Dura,Gloz,Leo,Otis,Ushug,Vizlark"
+KNOWN_TIP_NPCS  = "Mandibles,Qatik,Irkima,Eveline_Rastin,Arianna_Fangblade"

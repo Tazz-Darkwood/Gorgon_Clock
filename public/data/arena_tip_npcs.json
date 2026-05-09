@@ -1,0 +1,12 @@
+{
+  "_v": 1,
+  "tip_npcs": [
+    {"id": "Mandibles",         "favor_required": "Friends", "verified": true,
+     "verification_source": "wiki Mandibles page — 'rewards her friends with...a hot tip'"},
+    {"id": "Qatik",             "favor_required": "Friends", "verified": false},
+    {"id": "Irkima",            "favor_required": "Friends", "verified": false},
+    {"id": "Eveline_Rastin",    "favor_required": "Friends", "verified": false},
+    {"id": "Arianna_Fangblade", "favor_required": "Friends", "verified": false}
+  ],
+  "_TODO": "Verify favor thresholds for all entries except Mandibles (TODO-3)"
+}

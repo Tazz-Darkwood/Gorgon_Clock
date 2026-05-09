@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gorgon Clock — Tests</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #ddd; padding: 1rem; }
+    .pass { color: #4a7a2a; }
+    .fail { color: #c0392b; font-weight: bold; }
+    h2 { border-bottom: 1px solid #444; padding-bottom: 0.3rem; }
+    .summary { margin-top: 2rem; padding: 1rem; background: #222; }
+  </style>
+</head>
+<body>
+  <h1>Gorgon Clock — Test Runner</h1>
+  <p>Open this file in any browser. Each test logs ✓ (green) or ✗ (red).</p>
+
+  <div id="results"></div>
+
+  <script>
+    /** @type {{pass: number, fail: number, failures: string[]}} */
+    const stats = { pass: 0, fail: 0, failures: [] };
+    const results = document.getElementById('results');
+
+    /**
+     * @param {boolean} cond
+     * @param {string} name
+     */
+    function ok(cond, name) {
+      const div = document.createElement('div');
+      if (cond) {
+        stats.pass++;
+        div.className = 'pass';
+        div.textContent = '✓ ' + name;
+      } else {
+        stats.fail++;
+        stats.failures.push(name);
+        div.className = 'fail';
+        div.textContent = '✗ ' + name;
+      }
+      results.appendChild(div);
+    }
+
+    /** @param {string} title */
+    function section(title) {
+      const h = document.createElement('h2');
+      h.textContent = title;
+      results.appendChild(h);
+    }
+
+    function summary() {
+      const div = document.createElement('div');
+      div.className = 'summary';
+      div.innerHTML = `<strong>${stats.pass} passed / ${stats.fail} failed</strong>`;
+      if (stats.failures.length) {
+        div.innerHTML += '<br><br>Failures:<br>' + stats.failures.map(f => '• ' + f).join('<br>');
+      }
+      results.appendChild(div);
+    }
+
+    window.__test = { ok, section, summary };
+  </script>
+
+  <script src="js/math.js"></script>
+<script>
+  const { ok, section } = window.__test;
+
+  section('Math_.aggregateProbability');
+
+  ok(Math_.aggregateProbability([], 'Otis', 'Leo') === 0.5,
+     'empty tips → 50/50');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Otis', modifier_pct:10}], 'Otis', 'Leo'
+     ) === 0.6,
+     'fighter +10% applies to favored');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Leo', modifier_pct:10}], 'Otis', 'Leo'
+     ) === 0.4,
+     'fighter +10% on opponent reduces P(A)');
+
+  ok(Math_.aggregateProbability(
+       [
+         {type:'fighter', favored:'Otis', modifier_pct:5},
+         {type:'fighter', favored:'Otis', modifier_pct:3},
+         {type:'matchup', fighter_a:'Otis', fighter_b:'Leo', favored:'Otis', modifier_pct:10}
+       ], 'Otis', 'Leo'
+     ) === 0.68,
+     'tips stack additively (5+3+10 = +18%)');
+
+  ok(Math_.aggregateProbability(
+       [{type:'matchup', fighter_a:'Otis', fighter_b:'Vizlark', favored:'Otis', modifier_pct:30}],
+       'Otis', 'Leo'
+     ) === 0.5,
+     'matchup-specific tip ignored when fighters differ');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Otis', modifier_pct:200}], 'Otis', 'Leo'
+     ) === 0.99,
+     'clamps to 99% on absurd modifier');
+
+  ok(Math_.aggregateProbability(
+       [{type:'fighter', favored:'Leo', modifier_pct:200}], 'Otis', 'Leo'
+     ) === 0.01,
+     'clamps to 1% on negative absurd');
+
+  ok(Math_.aggregateProbability(
+       [{type:'matchup', fighter_a:'Leo', fighter_b:'Otis', favored:'Otis', modifier_pct:10}],
+       'Otis', 'Leo'
+     ) === 0.6,
+     'matchup tip works regardless of fighter order in tip object');
+
+  section('Math_.kellyBet (b = 0.9)');
+
+  ok(Math_.kellyBet(0.5, 50000, 1.0) === 0,
+     'no edge at 50/50: don\'t bet');
+
+  ok(Math_.kellyBet(0.5263, 50000, 1.0) === 0,
+     'still no edge exactly at break-even (0.5263): don\'t bet');
+
+  ok(Math_.kellyBet(0.6, 50000, 1.0) === Math.round(50000 * (1.9 * 0.6 - 1) / 0.9),
+     'full Kelly at 60% probability');
+
+  ok(Math_.kellyBet(0.6, 50000, 0.5) === Math.round(50000 * 0.5 * (1.9 * 0.6 - 1) / 0.9),
+     'half-Kelly is exactly half of full');
+
+  ok(Math_.kellyBet(0.6, 50000, 0.25) === Math.round(50000 * 0.25 * (1.9 * 0.6 - 1) / 0.9),
+     'quarter-Kelly');
+
+  ok(Math_.kellyBet(0.6, 0, 1.0) === 0,
+     'zero bankroll → zero bet');
+
+  ok(Math_.kellyBet(0.6, -100, 1.0) === 0,
+     'negative bankroll → zero bet');
+
+  ok(Math_.kellyBet(0.99, 1000, 1.0) > 0,
+     'extreme p still produces a positive bet');
+</script>
+
+<script src="js/schedule.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('Schedule.slotIdAt');
+
+    // Midnight EST is 05:00 UTC (EST is UTC-5, no DST per spec)
+    ok(Schedule.slotIdAt(new Date('2026-05-06T05:00:00Z')) === '2026-05-06-000',
+       'slot 0 = midnight EST');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-06T05:08:00Z')) === '2026-05-06-001',
+       'slot 1 = 8 minutes past midnight');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-06T10:36:00Z')) === '2026-05-06-042',
+       'slot 42 = 5h36m past midnight EST');
+
+    // Last slot of the day starts at 23:52 EST = 04:52 next-day UTC
+    ok(Schedule.slotIdAt(new Date('2026-05-07T04:52:00Z')) === '2026-05-06-179',
+       'slot 179 is the last of the previous EST day');
+
+    ok(Schedule.slotIdAt(new Date('2026-05-07T05:00:00Z')) === '2026-05-07-000',
+       'midnight rolls over to next day slot 0');
+
+    // Just before midnight EST is still yesterday
+    ok(Schedule.slotIdAt(new Date('2026-05-07T04:59:59Z')) === '2026-05-06-179',
+       'one second before midnight EST is still yesterday');
+
+    section('Schedule.startsAtUtc');
+
+    ok(Schedule.startsAtUtc('2026-05-06-000').toISOString() === '2026-05-06T05:00:00.000Z',
+       'slot 0 starts at midnight EST = 05:00 UTC');
+
+    ok(Schedule.startsAtUtc('2026-05-06-042').toISOString() === '2026-05-06T10:36:00.000Z',
+       'slot 42 starts 5h36m later');
+
+    ok(Schedule.startsAtUtc('2026-05-06-179').toISOString() === '2026-05-07T04:52:00.000Z',
+       'slot 179 starts at 23:52 EST');
+
+    section('Schedule.nextSlotIn');
+
+    ok(Schedule.nextSlotIn(
+         new Date('2026-05-06T05:07:00Z'),
+         '2026-05-06-001'
+       ) === 60_000,
+       '60s before slot starts → 60000ms');
+
+    ok(Schedule.nextSlotIn(
+         new Date('2026-05-06T05:08:00Z'),
+         '2026-05-06-001'
+       ) === 0,
+       'at slot start → 0ms');
+
+    ok(Schedule.nextSlotIn(
+         new Date('2026-05-06T05:09:00Z'),
+         '2026-05-06-001'
+       ) === -60_000,
+       '60s after slot start → -60000ms');
+
+    section('Schedule.canStillBet');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:35:59Z'), '2026-05-06-042') === true,
+       'before slot start → can still bet');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:36:00Z'), '2026-05-06-042') === false,
+       'at slot start → bets closed');
+
+    ok(Schedule.canStillBet(new Date('2026-05-06T10:36:01Z'), '2026-05-06-042') === false,
+       'after slot start → bets closed');
+
+    section('Schedule.localESTDate');
+
+    ok(Schedule.localESTDate(new Date('2026-05-06T05:00:00Z')) === '2026-05-06',
+       'midnight EST is 2026-05-06');
+
+    ok(Schedule.localESTDate(new Date('2026-05-07T04:59:00Z')) === '2026-05-06',
+       'one minute before EST midnight is still 2026-05-06');
+
+    ok(Schedule.localESTDate(new Date('2026-05-07T05:00:00Z')) === '2026-05-07',
+       'midnight EST rolls over to 2026-05-07');
+  })();
+</script>
+
+<script src="js/state.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('State.load / State.save');
+
+    localStorage.removeItem('gorgon_clock_state');
+
+    const fresh = State.load();
+    ok(fresh._v === 1, 'fresh load has _v = 1');
+    ok(fresh.tips_day !== undefined, 'fresh load has tips_day');
+    ok(fresh.bankroll === 0, 'fresh bankroll is 0');
+    ok(fresh.kelly_fraction === 'full', 'default kelly_fraction is full');
+    ok(typeof fresh.user_id === 'string' && fresh.user_id.startsWith('u_'),
+       'fresh load generates user_id starting with u_');
+    ok(Array.isArray(fresh.history), 'history is an array');
+    ok(typeof fresh.voted_slots === 'object', 'voted_slots is object');
+    ok(typeof fresh.voted_tips === 'object', 'voted_tips is object');
+
+    fresh.bankroll = 12345;
+    State.save(fresh);
+    const reloaded = State.load();
+    ok(reloaded.bankroll === 12345, 'save and reload round-trips');
+    ok(reloaded.user_id === fresh.user_id, 'user_id stable across saves');
+
+    localStorage.setItem('gorgon_clock_state', JSON.stringify({ _v: 99, bankroll: 999 }));
+    const reset = State.load();
+    ok(reset._v === 1, 'stale schema version triggers reset');
+    ok(reset.bankroll === 0, 'reset zeroes the bankroll');
+
+    localStorage.removeItem('gorgon_clock_state');
+
+    section('State.checkDayRollover');
+
+    localStorage.removeItem('gorgon_clock_state');
+    const s1 = State.load();
+    s1.tips_day = '2026-05-06';
+    s1.voted_tips = { 'tip_a': 'upvoted', 'tip_b': 'removed' };
+    State.save(s1);
+
+    ok(State.checkDayRollover(s1, new Date('2026-05-06T10:00:00Z')) === false,
+       'same day → no rollover');
+
+    const rolled = State.checkDayRollover(s1, new Date('2026-05-07T05:00:00Z'));
+    ok(rolled === true, 'midnight EST tick triggers rollover');
+    ok(s1.tips_day === '2026-05-07', 'tips_day updated to new day');
+    ok(Object.keys(s1.voted_tips).length === 0, 'voted_tips wiped');
+
+    localStorage.removeItem('gorgon_clock_state');
+  })();
+</script>
+
+  <script src="js/api.js"></script>
+<script>
+  (function() {
+    const { ok, section } = window.__test;
+    section('Api smoke (offline → graceful failure)');
+
+    /** @type {any} */ (window).GORGON_API_BASE = 'http://127.0.0.1:1';
+
+    Api.getState('2026-05-06-042', '2026-05-06').then(r => {
+      ok(!r.ok, 'getState returns ok:false on network error');
+      ok(r.status === 0, 'network error has status 0');
+    });
+
+    Api.postMatchup('2026-05-06-042', {
+      user_id: 'u_test12345678', action: 'create',
+      fighter_a: 'Otis', fighter_b: 'Leo'
+    }).then(r => {
+      ok(!r.ok, 'postMatchup returns ok:false on network error');
+    });
+  })();
+</script>
+
+  <script>
+    // Run summary at end after all test scripts have loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      window.__test.summary();
+    });
+  </script>
+</body>
+</html>
