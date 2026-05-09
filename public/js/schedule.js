@@ -9,7 +9,7 @@
  */
 const Schedule = (() => {
   const EST_OFFSET_HOURS = -5;
-  const SLOT_MS = 8 * 60 * 1000;
+  const SLOT_MS = 10 * 60 * 1000;
   const SLOTS_PER_DAY = 180;
 
   /**
