@@ -210,7 +210,10 @@
         const visibleTips = tips.filter((/** @type {any} */ t) => state.voted_tips[t.id] !== 'removed');
         const p = Math_.aggregateProbability(visibleTips, pickedEntry.fighter_a, pickedEntry.fighter_b);
         const fracN = _kellyFractionToNumber(state.kelly_fraction);
-        const bet = Math_.kellyBet(p, state.bankroll, fracN);
+        // Always size the bet for whichever fighter is the underdog-of-the-house —
+        // i.e. the side with higher win probability. The display picks which fighter
+        // to recommend based on the same comparison.
+        const bet = Math_.kellyBet(Math.max(p, 1 - p), state.bankroll, fracN);
         kellyContainer.appendChild(KellyDisplay.render({
           fighter_a: pickedEntry.fighter_a,
           fighter_b: pickedEntry.fighter_b,
