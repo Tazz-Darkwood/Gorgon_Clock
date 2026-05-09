@@ -53,7 +53,7 @@ describe('matchup', () => {
     expect(r.entries[0].voter_ids).toEqual(['u_aaa111aaa111', 'u_bbb222bbb222']);
   });
 
-  it('vote action moves user from one entry to another', async () => {
+  it('vote action moves user, and the now-empty source entry is pruned', async () => {
     const slot = '2026-05-06-102';
     await reset(slot);
     await createOrVote(env.STATE, slot, {
@@ -69,11 +69,38 @@ describe('matchup', () => {
       user_id: 'u_aaa111aaa111', action: 'vote',
       entry_id: otisVizlarkBefore.id
     }, FIGHTERS);
-    const otisLeo = findByPair(v.entries, 'Otis', 'Leo');
+    // Otis/Leo had only u_aaa as voter — once they switch, the entry is pruned
+    expect(v.entries.length).toBe(1);
     const otisVizlark = findByPair(v.entries, 'Otis', 'Vizlark');
-    expect(otisLeo.voter_ids).toEqual([]);
     expect(otisVizlark.voter_ids).toContain('u_aaa111aaa111');
     expect(otisVizlark.voter_ids).toContain('u_bbb222bbb222');
+  });
+
+  it('removeVote prunes an entry that loses its last voter', async () => {
+    const slot = '2026-05-06-107';
+    await reset(slot);
+    await createOrVote(env.STATE, slot, {
+      user_id: 'u_aaa111aaa111', action: 'create',
+      fighter_a: 'Otis', fighter_b: 'Leo'
+    }, FIGHTERS);
+    const r = await removeVote(env.STATE, slot, 'u_aaa111aaa111');
+    expect(r.entries).toEqual([]);
+  });
+
+  it('removeVote keeps entries that still have other voters', async () => {
+    const slot = '2026-05-06-108';
+    await reset(slot);
+    await createOrVote(env.STATE, slot, {
+      user_id: 'u_aaa111aaa111', action: 'create',
+      fighter_a: 'Otis', fighter_b: 'Leo'
+    }, FIGHTERS);
+    await createOrVote(env.STATE, slot, {
+      user_id: 'u_bbb222bbb222', action: 'create',
+      fighter_a: 'Leo', fighter_b: 'Otis'   // dedups onto same entry
+    }, FIGHTERS);
+    const r = await removeVote(env.STATE, slot, 'u_aaa111aaa111');
+    expect(r.entries.length).toBe(1);
+    expect(r.entries[0].voter_ids).toEqual(['u_bbb222bbb222']);
   });
 
   it('rejects A == B', async () => {

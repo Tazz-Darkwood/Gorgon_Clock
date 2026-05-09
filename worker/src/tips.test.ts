@@ -57,8 +57,27 @@ describe('tips', () => {
     expect(tip.removers).not.toContain('u_bbb222bbb222');
   });
 
-  it('patchTip remove moves user from upvoters to removers', async () => {
+  it('patchTip remove by a non-submitter moves user into removers', async () => {
     const day = '2026-06-05';
+    await reset(day);
+    const created = await submitTip(env.STATE, day, {
+      user_id: 'u_aaa111aaa111', type: 'fighter', source_npc: 'Qatik',
+      fighter_a: 'Otis', fighter_b: null, favored: 'Otis', modifier_pct: 5
+    }, FIGHTERS, NPCS);
+    const id = created.tips[0].id;
+    const r = await patchTip(env.STATE, day, id, {
+      user_id: 'u_bbb222bbb222', action: 'remove'
+    });
+    const tip = r.tips.find(t => t.id === id)!;
+    expect(tip).toBeDefined();
+    expect(tip.removers).toContain('u_bbb222bbb222');
+    expect(tip.upvoters).not.toContain('u_bbb222bbb222');
+    // submitter's auto-upvote is untouched
+    expect(tip.upvoters).toContain('u_aaa111aaa111');
+  });
+
+  it('patchTip remove BY THE SUBMITTER deletes the tip entirely', async () => {
+    const day = '2026-06-09';
     await reset(day);
     const created = await submitTip(env.STATE, day, {
       user_id: 'u_aaa111aaa111', type: 'fighter', source_npc: 'Qatik',
@@ -68,9 +87,7 @@ describe('tips', () => {
     const r = await patchTip(env.STATE, day, id, {
       user_id: 'u_aaa111aaa111', action: 'remove'
     });
-    const tip = r.tips.find(t => t.id === id)!;
-    expect(tip.upvoters).not.toContain('u_aaa111aaa111');
-    expect(tip.removers).toContain('u_aaa111aaa111');
+    expect(r.tips.find(t => t.id === id)).toBeUndefined();
   });
 
   it('patchTip reset removes user from both lists', async () => {

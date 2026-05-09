@@ -63,11 +63,22 @@
       State.save(state);
       renderAll();
     },
-    onPicked: (entryId) => {
+    onPicked: async (entryId) => {
       const slotKey = Schedule.slotIdAt(new Date());
-      if (entryId) state.voted_slots[slotKey] = entryId;
-      else delete state.voted_slots[slotKey];
+      if (entryId) {
+        state.voted_slots[slotKey] = entryId;
+        State.save(state);
+        renderAll();
+        return;
+      }
+      // Unpick: remove our vote on the server too. If we were the entry's
+      // only voter, the Worker prunes it so other players don't see a
+      // ghost matchup we no longer endorse.
+      delete state.voted_slots[slotKey];
       State.save(state);
+      const r = await Api.deleteMatchup(slotKey, state.user_id);
+      if (r.ok) { hideBanner(); _latest.slot = r.data; }
+      else showBanner("Couldn't reach shared state — local-only mode.");
       renderAll();
     }
   });
