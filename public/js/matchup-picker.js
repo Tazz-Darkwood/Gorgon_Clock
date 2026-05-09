@@ -2,16 +2,14 @@
 'use strict';
 
 const MatchupPicker = (() => {
-  /** @type {string[]} */ let _fighters = [];
-  /** @type {(action: 'create'|'vote', payload: any) => void} */ let _onAction = () => {};
+  /** @type {(payload: {entry_id: string}) => void} */ let _onVote = () => {};
   /** @type {(entryId: string) => void} */ let _onPicked = () => {};
 
   /**
-   * @param {{fighters: string[], onAction: (a: 'create'|'vote', p: any) => void, onPicked: (id: string) => void}} cfg
+   * @param {{onVote: (p: {entry_id: string}) => void, onPicked: (id: string) => void}} cfg
    */
   function init(cfg) {
-    _fighters = cfg.fighters;
-    _onAction = cfg.onAction;
+    _onVote = cfg.onVote;
     _onPicked = cfg.onPicked;
   }
 
@@ -34,25 +32,11 @@ const MatchupPicker = (() => {
 
   function _renderEmpty() {
     const div = document.createElement('div');
-    const fighterOptions = _fighters.map(f => `<option value="${f}">${f}</option>`).join('');
     div.innerHTML = `
       <div style="text-align:center;padding:1rem 0;color:var(--amber-dim);font-style:italic;">
-        No matchup entered yet. Be the first.
+        No matchup entered yet. Submit one below.
       </div>
-      <div style="display:flex;gap:0.4rem;align-items:center;">
-        <select data-mp="a" style="flex:1;background:var(--panel-bg);color:var(--body-dim);border:1px solid var(--body-faint);padding:0.2rem;">${fighterOptions}</select>
-        <span style="color:var(--amber-dim);">vs</span>
-        <select data-mp="b" style="flex:1;background:var(--panel-bg);color:var(--body-dim);border:1px solid var(--body-faint);padding:0.2rem;">${fighterOptions}</select>
-      </div>
-      <button data-mp="submit" style="margin-top:0.5rem;width:100%;background:var(--maroon);color:var(--amber-bright);border:1px solid var(--maroon-bright);padding:0.3rem;font-family:'Cinzel',serif;letter-spacing:0.06em;font-size:0.8rem;cursor:pointer;">Submit Matchup</button>
     `;
-    const submitBtn = div.querySelector('[data-mp="submit"]');
-    if (submitBtn) submitBtn.addEventListener('click', () => {
-      const a = /** @type {HTMLSelectElement} */ (div.querySelector('[data-mp="a"]')).value;
-      const b = /** @type {HTMLSelectElement} */ (div.querySelector('[data-mp="b"]')).value;
-      if (a === b) return;
-      _onAction('create', { fighter_a: a, fighter_b: b });
-    });
     return div;
   }
 
@@ -76,7 +60,7 @@ const MatchupPicker = (() => {
       }
     `;
     const confirmBtn = div.querySelector('[data-mp="confirm"]');
-    if (confirmBtn) confirmBtn.addEventListener('click', () => _onAction('vote', { entry_id: entry.id }));
+    if (confirmBtn) confirmBtn.addEventListener('click', () => _onVote({ entry_id: entry.id }));
     const unpick = div.querySelector('[data-mp="unpick"]');
     if (unpick) unpick.addEventListener('click', (e) => { e.preventDefault(); _onPicked(''); });
     return div;
@@ -100,7 +84,7 @@ const MatchupPicker = (() => {
         <span style="font-size:0.85rem;">${entry.fighter_a} vs ${entry.fighter_b}</span>
         <span style="font-size:0.72rem;color:${isPicked ? 'var(--green)' : 'var(--body-dim)'};">${entry.voter_ids.length} vote${entry.voter_ids.length===1?'':'s'}${isPicked ? ' ✓' : ''}</span>
       `;
-      row.addEventListener('click', () => _onAction('vote', { entry_id: entry.id }));
+      row.addEventListener('click', () => _onVote({ entry_id: entry.id }));
       div.appendChild(row);
     }
     return div;

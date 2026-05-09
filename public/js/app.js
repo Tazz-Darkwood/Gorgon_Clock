@@ -31,8 +31,10 @@
   const banner = document.getElementById('banner');
   const cdValue = document.getElementById('countdown-value');
   const cdMeta = document.getElementById('countdown-meta');
-  const tipsContainer = document.getElementById('tips-container');
+  const tipsList = document.getElementById('tips-list');
+  const tipFormContainer = document.getElementById('tip-form-container');
   const matchupContainer = document.getElementById('matchup-container');
+  const matchupFormContainer = document.getElementById('matchup-form-container');
   const kellyContainer = document.getElementById('kelly-container');
   const historyContainer = document.getElementById('history-container');
 
@@ -48,20 +50,16 @@
     }
   });
   MatchupPicker.init({
-    fighters,
-    onAction: async (action, payload) => {
+    onVote: async ({ entry_id }) => {
       const slotId = Schedule.slotIdAt(new Date());
-      const body = action === 'create'
-        ? { user_id: state.user_id, action, fighter_a: payload.fighter_a, fighter_b: payload.fighter_b }
-        : { user_id: state.user_id, action, entry_id: payload.entry_id };
-      const r = await Api.postMatchup(slotId, /** @type {any} */ (body));
+      const r = await Api.postMatchup(slotId, /** @type {any} */ ({
+        user_id: state.user_id, action: 'vote', entry_id
+      }));
       if (!r.ok) { showBanner("Couldn't reach shared state — local-only mode."); return; }
       hideBanner();
       _latest.slot = r.data;
-      // Determine which entry the user is now voted for
-      const slotKey = slotId;
       const myEntry = r.data.entries.find((/** @type {any} */ e) => e.voter_ids.includes(state.user_id));
-      state.voted_slots[slotKey] = myEntry ? myEntry.id : '';
+      state.voted_slots[slotId] = myEntry ? myEntry.id : '';
       State.save(state);
       renderAll();
     },
@@ -77,9 +75,32 @@
     onBankrollChange: (n) => { state.bankroll = n; State.save(state); renderAll(); },
     onFractionChange: (f) => { state.kelly_fraction = f; State.save(state); renderAll(); }
   });
+  MatchupForm.init({
+    fighters,
+    onSubmit: async ({ fighter_a, fighter_b }) => {
+      const slotId = Schedule.slotIdAt(new Date());
+      const r = await Api.postMatchup(slotId, /** @type {any} */ ({
+        user_id: state.user_id, action: 'create', fighter_a, fighter_b
+      }));
+      if (!r.ok) { showBanner("Couldn't reach shared state — local-only mode."); return; }
+      hideBanner();
+      _latest.slot = r.data;
+      const myEntry = r.data.entries.find((/** @type {any} */ e) => e.voter_ids.includes(state.user_id));
+      state.voted_slots[slotId] = myEntry ? myEntry.id : '';
+      State.save(state);
+      renderAll();
+    }
+  });
+
+  // Mount forms once so re-renders don't wipe in-progress input
+  if (tipFormContainer) tipFormContainer.appendChild(TipForm.render());
+  if (matchupFormContainer) matchupFormContainer.appendChild(MatchupForm.render());
 
   /** @type {{slot: any, tips: any}} */
   let _latest = { slot: { entries: [] }, tips: { tips: [] } };
+  // Cached signature of the last matchup render — skip re-render when unchanged so the
+  // empty-state form's selects don't reset under the user.
+  let _lastMatchupSig = '';
 
   function showBanner(/** @type {string} */ msg) { if (banner) { banner.textContent = msg; banner.classList.add('visible'); } }
   function hideBanner() { if (banner) banner.classList.remove('visible'); }
@@ -99,7 +120,7 @@
     return f === 'full' ? 1.0 : f === 'quarter' ? 0.25 : 0.5;
   }
 
-  function renderAll() {
+  function tickCountdown() {
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
     const msUntil = Schedule.nextSlotIn(now, slotId);
@@ -109,10 +130,16 @@
     if (cdValue) cdValue.textContent = `${m}:${s.toString().padStart(2,'0')}`;
     const startsAt = Schedule.startsAtUtc(slotId);
     if (cdMeta) cdMeta.textContent = `slot #${slotId.slice(-3)} · starts ${startsAt.toUTCString().slice(17,22)} UTC · 8m window`;
+  }
 
-    // Tips panel
-    if (tipsContainer) {
-      tipsContainer.innerHTML = '';
+  function renderAll() {
+    tickCountdown();
+    const now = new Date();
+    const slotId = Schedule.slotIdAt(now);
+
+    // Tips panel — only the list; the form is mounted once and stays put.
+    if (tipsList) {
+      tipsList.innerHTML = '';
       const tips = (_latest.tips && _latest.tips.tips) ? _latest.tips.tips : [];
       const visibleTips = tips.filter((/** @type {any} */ t) => state.voted_tips[t.id] !== 'removed');
       for (const tip of visibleTips) {
@@ -147,37 +174,41 @@
             renderAll();
           });
         });
-        tipsContainer.appendChild(card);
+        tipsList.appendChild(card);
       }
-      tipsContainer.appendChild(TipForm.render());
     }
 
-    // Matchup panel
-    if (matchupContainer) {
+    // Matchup panel — re-render only when slot data or pick changed.
+    const slot = _latest.slot || { entries: [] };
+    const pickedId = state.voted_slots[slotId] || null;
+    const sig = JSON.stringify({
+      s: slotId,
+      p: pickedId,
+      e: (slot.entries || []).map((/** @type {any} */ e) => [e.id, e.fighter_a, e.fighter_b, e.voter_ids.length])
+    });
+    if (matchupContainer && sig !== _lastMatchupSig) {
+      _lastMatchupSig = sig;
       matchupContainer.innerHTML = '';
-      const slot = _latest.slot;
-      const pickedId = state.voted_slots[slotId] || null;
       matchupContainer.appendChild(MatchupPicker.render({ entries: slot.entries || [] }, pickedId));
+    }
 
-      // Kelly panel
-      if (kellyContainer) {
-        kellyContainer.innerHTML = '';
-        const pickedEntry = pickedId ? (slot.entries || []).find((/** @type {any} */ e) => e.id === pickedId) : null;
-        if (pickedEntry) {
-          // Math: filter tips by user's stance
-          const tips = (_latest.tips && _latest.tips.tips) ? _latest.tips.tips : [];
-          const visibleTips = tips.filter((/** @type {any} */ t) => state.voted_tips[t.id] !== 'removed');
-          const p = Math_.aggregateProbability(visibleTips, pickedEntry.fighter_a, pickedEntry.fighter_b);
-          const fracN = _kellyFractionToNumber(state.kelly_fraction);
-          const bet = Math_.kellyBet(p, state.bankroll, fracN);
-          kellyContainer.appendChild(KellyDisplay.render({
-            fighter_a: pickedEntry.fighter_a,
-            fighter_b: pickedEntry.fighter_b,
-            p, bankroll: state.bankroll, fraction: state.kelly_fraction, recommendedBet: bet
-          }));
-        } else {
-          kellyContainer.appendChild(KellyDisplay.render(null));
-        }
+    // Kelly panel — cheap to rebuild and has no input the user is mid-typing into often.
+    if (kellyContainer) {
+      kellyContainer.innerHTML = '';
+      const pickedEntry = pickedId ? (slot.entries || []).find((/** @type {any} */ e) => e.id === pickedId) : null;
+      if (pickedEntry) {
+        const tips = (_latest.tips && _latest.tips.tips) ? _latest.tips.tips : [];
+        const visibleTips = tips.filter((/** @type {any} */ t) => state.voted_tips[t.id] !== 'removed');
+        const p = Math_.aggregateProbability(visibleTips, pickedEntry.fighter_a, pickedEntry.fighter_b);
+        const fracN = _kellyFractionToNumber(state.kelly_fraction);
+        const bet = Math_.kellyBet(p, state.bankroll, fracN);
+        kellyContainer.appendChild(KellyDisplay.render({
+          fighter_a: pickedEntry.fighter_a,
+          fighter_b: pickedEntry.fighter_b,
+          p, bankroll: state.bankroll, fraction: state.kelly_fraction, recommendedBet: bet
+        }));
+      } else {
+        kellyContainer.appendChild(KellyDisplay.render(null));
       }
     }
 
@@ -188,9 +219,11 @@
     }
   }
 
-  // Tick: update countdown every second; poll every 30s (10s in last minute)
+  // Tick: countdown every second; poll on a longer cadence. Panels render only on
+  // poll completion or user action so input fields aren't reset under the user.
   let lastPollAt = 0;
   setInterval(() => {
+    tickCountdown();
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
     const msUntil = Schedule.nextSlotIn(now, slotId);
@@ -198,8 +231,6 @@
     if (now.getTime() - lastPollAt > interval) {
       lastPollAt = now.getTime();
       poll();
-    } else {
-      renderAll();
     }
   }, 1000);
 
