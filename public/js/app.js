@@ -120,16 +120,25 @@
     return f === 'full' ? 1.0 : f === 'quarter' ? 0.25 : 0.5;
   }
 
+  /** Escape HTML so server-supplied strings can never inject markup. */
+  function _esc(/** @type {unknown} */ s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // 8-min slot in ms; we count down to the *next* slot's start, not the current slot's
+  // (Schedule.startsAtUtc returns the current slot's start which is always in the past).
+  const SLOT_MS_LOCAL = 8 * 60 * 1000;
+
   function tickCountdown() {
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
-    const msUntil = Schedule.nextSlotIn(now, slotId);
-    const remaining = Math.max(0, msUntil);
+    const currentStart = Schedule.startsAtUtc(slotId);
+    const nextStart = new Date(currentStart.getTime() + SLOT_MS_LOCAL);
+    const remaining = Math.max(0, nextStart.getTime() - now.getTime());
     const m = Math.floor(remaining / 60000);
     const s = Math.floor((remaining % 60000) / 1000);
     if (cdValue) cdValue.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    const startsAt = Schedule.startsAtUtc(slotId);
-    if (cdMeta) cdMeta.textContent = `slot #${slotId.slice(-3)} · starts ${startsAt.toUTCString().slice(17,22)} UTC · 8m window`;
+    if (cdMeta) cdMeta.textContent = `slot #${slotId.slice(-3)} · next start ${nextStart.toUTCString().slice(17,22)} UTC · 8m window`;
   }
 
   function renderAll() {
@@ -150,15 +159,15 @@
         const sign = tip.modifier_pct >= 0 ? '+' : '';
         card.style.cssText = `border-left:2px solid ${tip.modifier_pct>=0?'var(--green)':'var(--red)'};padding:0.4rem 0.6rem;margin-bottom:0.4rem;background:rgba(${tip.modifier_pct>=0?'74,122,42':'192,57,43'},0.05);font-size:0.82rem;`;
         const target = tip.type === 'matchup'
-          ? `<strong>${tip.fighter_a}</strong> vs <strong>${tip.fighter_b}</strong> → ${tip.favored} <span style="color:${tip.modifier_pct>=0?'var(--green)':'var(--red)'};">${sign}${tip.modifier_pct}%</span>`
-          : `<strong>${tip.favored}</strong> <span style="color:${tip.modifier_pct>=0?'var(--green)':'var(--red)'};">${sign}${tip.modifier_pct}%</span> all day`;
+          ? `<strong>${_esc(tip.fighter_a)}</strong> vs <strong>${_esc(tip.fighter_b)}</strong> → ${_esc(tip.favored)} <span style="color:${tip.modifier_pct>=0?'var(--green)':'var(--red)'};">${sign}${tip.modifier_pct}%</span>`
+          : `<strong>${_esc(tip.favored)}</strong> <span style="color:${tip.modifier_pct>=0?'var(--green)':'var(--red)'};">${sign}${tip.modifier_pct}%</span> all day`;
         card.innerHTML = `
           <div>${target}</div>
-          <div style="font-size:0.7rem;color:var(--amber-dim);">from ${tip.source_npc.replace(/_/g,' ')} · ↑${upCount} ✕${removeCount}</div>
+          <div style="font-size:0.7rem;color:var(--amber-dim);">from ${_esc(String(tip.source_npc).replace(/_/g,' '))} · ↑${upCount} ✕${removeCount}</div>
           <div style="margin-top:0.2rem;font-size:0.7rem;">
-            <a href="#" data-act="upvote" data-id="${tip.id}" style="color:var(--green);" aria-label="Upvote tip">↑ upvote</a> ·
-            <a href="#" data-act="remove" data-id="${tip.id}" style="color:var(--red);" aria-label="Remove tip from your feed">✕ remove</a>
-            ${stance ? ` · <span style="color:var(--amber-dim);">(your stance: ${stance})</span>` : ''}
+            <a href="#" data-act="upvote" data-id="${_esc(tip.id)}" style="color:var(--green);" aria-label="Upvote tip">↑ upvote</a> ·
+            <a href="#" data-act="remove" data-id="${_esc(tip.id)}" style="color:var(--red);" aria-label="Remove tip from your feed">✕ remove</a>
+            ${stance ? ` · <span style="color:var(--amber-dim);">(your stance: ${_esc(stance)})</span>` : ''}
           </div>
         `;
         card.querySelectorAll('[data-act]').forEach(a => {
@@ -226,8 +235,8 @@
     tickCountdown();
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
-    const msUntil = Schedule.nextSlotIn(now, slotId);
-    const interval = (msUntil > 0 && msUntil < 60_000) ? 10_000 : 30_000;
+    const msToNext = (Schedule.startsAtUtc(slotId).getTime() + SLOT_MS_LOCAL) - now.getTime();
+    const interval = (msToNext > 0 && msToNext < 60_000) ? 10_000 : 30_000;
     if (now.getTime() - lastPollAt > interval) {
       lastPollAt = now.getTime();
       poll();

@@ -213,6 +213,7 @@
     .cat-special { color: var(--event-red);   border-color: var(--maroon-mid); }
     .cat-temp    { color: #6db3a8;            border-color: #3a6058; }
     .cat-in-game { color: #b78de0;            border-color: #5a4a78; }
+    .cat-casino  { color: var(--event-red);   border-color: var(--maroon-bright); }
 
     /* ── Delete button for temp event rows ── */
     .temp-delete {
@@ -1888,8 +1889,10 @@ tickCountdowns();
   function tick() {
     const now = new Date();
     const slotId = slotIdAt(now);
-    const start = startsAtUtc(slotId);
-    const ms = start.getTime() - now.getTime();
+    // startsAtUtc returns the *current* slot's start (in the past). For the countdown
+    // we want the next slot's start, which is +SLOT_MS later.
+    const nextStart = new Date(startsAtUtc(slotId).getTime() + SLOT_MS);
+    const ms = nextStart.getTime() - now.getTime();
     if (ms > 0) {
       const m = Math.floor(ms / 60000);
       const s = Math.floor((ms % 60000) / 1000);
@@ -1897,7 +1900,7 @@ tickCountdowns();
     } else {
       cdEl.textContent = 'fight in progress';
     }
-    metaEl.textContent = ' · slot #' + slotId.slice(-3) + ' · ' + start.toUTCString().slice(17,22) + ' UTC';
+    metaEl.textContent = ' · slot #' + slotId.slice(-3) + ' · ' + nextStart.toUTCString().slice(17,22) + ' UTC';
     matchupEl.textContent = latestMatchup;
 
     const interval = (ms > 0 && ms < 60_000) ? 10_000 : 30_000;
