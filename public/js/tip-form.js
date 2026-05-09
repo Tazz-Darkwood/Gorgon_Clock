@@ -40,7 +40,12 @@ const TipForm = (() => {
       <div style="margin-top:0.4rem;font-size:0.8rem;">
         Modifier:
         <select data-tf="sign"><option value="1">+</option><option value="-1">−</option></select>
-        <input type="number" data-tf="value" min="0" max="50" value="5" style="width:60px;"> %
+        <select data-tf="value">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select> %
       </div>
       <button data-tf="submit" style="margin-top:0.5rem;background:var(--maroon);color:var(--amber-bright);border:1px solid var(--maroon-bright);padding:0.3rem 0.8rem;font-family:'Cinzel',serif;letter-spacing:0.06em;cursor:pointer;font-size:0.78rem;">Save Tip</button>
       <div data-tf="error" style="color:var(--red);font-size:0.75rem;margin-top:0.3rem;"></div>
@@ -69,12 +74,8 @@ const TipForm = (() => {
       const favored = /** @type {HTMLSelectElement} */ ($('favored')).value;
       const opponent = /** @type {HTMLSelectElement} */ ($('opponent')).value;
       const sign = /** @type {HTMLSelectElement} */ ($('sign')).value === '-1' ? -1 : 1;
-      const valueRaw = /** @type {HTMLInputElement} */ ($('value')).value;
+      const valueRaw = /** @type {HTMLSelectElement} */ ($('value')).value;
       const value = parseInt(valueRaw, 10);
-      if (!Number.isInteger(value) || value < 0 || value > 50) {
-        errorEl.textContent = 'Modifier must be 0–50.';
-        return;
-      }
       const modifier_pct = sign * value;
       if (t === 'matchup' && favored === opponent) {
         errorEl.textContent = 'Favored and opponent must differ.';
@@ -84,8 +85,8 @@ const TipForm = (() => {
         ? { type: 'matchup', source_npc, fighter_a: favored, fighter_b: opponent, favored, modifier_pct }
         : { type: 'fighter', source_npc, fighter_a: favored, fighter_b: null, favored, modifier_pct };
       _onSubmit(tip);
-      // Reset form value to default for next entry
-      /** @type {HTMLInputElement} */ ($('value')).value = '5';
+      // Reset value select to default for next entry
+      /** @type {HTMLSelectElement} */ ($('value')).value = '5';
     });
 
     updateVisibility();
