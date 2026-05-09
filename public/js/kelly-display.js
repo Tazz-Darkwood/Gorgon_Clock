@@ -27,10 +27,19 @@ const KellyDisplay = (() => {
       div.innerHTML = `<div style="margin-top:0.7rem;text-align:center;color:var(--amber-dim);font-style:italic;font-size:0.85rem;">Pick a matchup to see win probability</div>`;
       return div;
     }
-    const pctA = Math.round(info.p * 100);
+    const pA = info.p;
+    const pB = 1 - pA;
+    const pctA = Math.round(pA * 100);
     const pctB = 100 - pctA;
-    const edge = (1.9 * info.p - 1);
-    const aboveBreakEven = edge > 0;
+    const edgeA = 1.9 * pA - 1;
+    const edgeB = 1.9 * pB - 1;
+    // Recommend whichever side has the higher (positive) edge. House edge means a
+    // 47–53% pA range produces negative edges on both sides — that's the genuine
+    // no-bet zone. Outside that range, exactly one side is profitable.
+    const betOnA = edgeA >= edgeB;
+    const recFighter = betOnA ? info.fighter_a : info.fighter_b;
+    const recEdge = betOnA ? edgeA : edgeB;
+    const aboveBreakEven = recEdge > 0;
     const fractions = /** @type {const} */ (['full','half','quarter']);
     const labels = { full: 'Full Kelly', half: 'Half-Kelly', quarter: 'Quarter-Kelly' };
 
@@ -52,11 +61,11 @@ const KellyDisplay = (() => {
 
       <div style="margin-top:0.5rem;background:rgba(200,120,10,${aboveBreakEven?'0.08':'0.02'});border:1px solid ${aboveBreakEven?'var(--amber)':'var(--body-faint)'};padding:0.6rem;text-align:center;">
         ${aboveBreakEven
-          ? `<div style="font-size:0.7rem;color:var(--amber-dim);letter-spacing:0.08em;text-transform:uppercase;">Recommended bet on ${_esc(info.fighter_a)}</div>
+          ? `<div style="font-size:0.7rem;color:var(--amber-dim);letter-spacing:0.08em;text-transform:uppercase;">Recommended bet on ${_esc(recFighter)}</div>
              <div style="color:var(--amber-bright);font-family:'Cinzel',serif;font-size:1.4rem;padding:0.3rem 0;">${info.recommendedBet.toLocaleString()} councils</div>
-             <div style="font-size:0.7rem;color:var(--body-dim);">edge +${(edge*100).toFixed(1)}% · ${labels[info.fraction]}</div>`
+             <div style="font-size:0.7rem;color:var(--body-dim);">edge +${(recEdge*100).toFixed(1)}% · ${labels[info.fraction]}</div>`
           : `<div style="color:var(--red);font-family:'Cinzel',serif;font-size:1rem;padding:0.2rem 0;">DON'T BET</div>
-             <div style="font-size:0.72rem;color:var(--body-dim);">house edge exceeds your information edge</div>`
+             <div style="font-size:0.72rem;color:var(--body-dim);">neither side has an edge over the house</div>`
         }
       </div>
     `;

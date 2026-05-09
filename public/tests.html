@@ -136,6 +136,15 @@
 
   ok(Math_.kellyBet(0.99, 1000, 1.0) > 0,
      'extreme p still produces a positive bet');
+
+  // The orchestration in app.js feeds Math.max(p, 1-p) so that the underdog
+  // side's high probability still produces a Kelly bet. These tests assert
+  // the kelly function itself is symmetric — caller is responsible for picking
+  // which side, but flipping p across 0.5 produces the same bet size.
+  ok(Math_.kellyBet(0.7, 50000, 1.0) === Math_.kellyBet(Math.max(0.3, 1-0.3), 50000, 1.0),
+     'either-side bet sizing: f(0.7) === f(max(0.3, 0.7))');
+  ok(Math_.kellyBet(0.5, 50000, 1.0) === Math_.kellyBet(Math.max(0.5, 1-0.5), 50000, 1.0),
+     'no-bet zone: 50/50 stays no-bet whichever side the caller checks');
 </script>
 
 <script src="js/schedule.js"></script>
