@@ -5,6 +5,10 @@ const KellyDisplay = (() => {
   /** @type {(bankroll: number) => void} */ let _onBankrollChange = () => {};
   /** @type {(fraction: 'full'|'half'|'quarter') => void} */ let _onFractionChange = () => {};
 
+  function _esc(/** @type {unknown} */ s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   /**
    * @param {{onBankrollChange: (n:number)=>void, onFractionChange: (f:'full'|'half'|'quarter')=>void}} cfg
    */
@@ -33,8 +37,8 @@ const KellyDisplay = (() => {
     div.innerHTML = `
       <div style="margin-top:0.7rem;font-size:0.78rem;color:var(--body-dim);">Win Probability</div>
       <div style="display:flex;height:28px;border:1px solid var(--body-faint);">
-        <div style="background:var(--green);width:${pctA}%;color:white;padding-left:0.5rem;font-size:0.85rem;line-height:28px;">${info.fighter_a} · ${pctA}%</div>
-        <div style="background:var(--maroon);width:${pctB}%;color:var(--body-text);text-align:right;padding-right:0.5rem;font-size:0.85rem;line-height:28px;">${info.fighter_b} · ${pctB}%</div>
+        <div style="background:var(--green);width:${pctA}%;color:white;padding-left:0.5rem;font-size:0.85rem;line-height:28px;">${_esc(info.fighter_a)} · ${pctA}%</div>
+        <div style="background:var(--maroon);width:${pctB}%;color:var(--body-text);text-align:right;padding-right:0.5rem;font-size:0.85rem;line-height:28px;">${_esc(info.fighter_b)} · ${pctB}%</div>
       </div>
       <div style="font-size:0.7rem;color:var(--amber-dim);margin-top:0.2rem;">break-even at 53%</div>
 
@@ -48,7 +52,7 @@ const KellyDisplay = (() => {
 
       <div style="margin-top:0.5rem;background:rgba(200,120,10,${aboveBreakEven?'0.08':'0.02'});border:1px solid ${aboveBreakEven?'var(--amber)':'var(--body-faint)'};padding:0.6rem;text-align:center;">
         ${aboveBreakEven
-          ? `<div style="font-size:0.7rem;color:var(--amber-dim);letter-spacing:0.08em;text-transform:uppercase;">Recommended bet on ${info.fighter_a}</div>
+          ? `<div style="font-size:0.7rem;color:var(--amber-dim);letter-spacing:0.08em;text-transform:uppercase;">Recommended bet on ${_esc(info.fighter_a)}</div>
              <div style="color:var(--amber-bright);font-family:'Cinzel',serif;font-size:1.4rem;padding:0.3rem 0;">${info.recommendedBet.toLocaleString()} councils</div>
              <div style="font-size:0.7rem;color:var(--body-dim);">edge +${(edge*100).toFixed(1)}% · ${labels[info.fraction]}</div>`
           : `<div style="color:var(--red);font-family:'Cinzel',serif;font-size:1rem;padding:0.2rem 0;">DON'T BET</div>

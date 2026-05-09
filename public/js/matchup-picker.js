@@ -5,6 +5,11 @@ const MatchupPicker = (() => {
   /** @type {(payload: {entry_id: string}) => void} */ let _onVote = () => {};
   /** @type {(entryId: string) => void} */ let _onPicked = () => {};
 
+  /** Escape HTML so server-supplied fighter names can never inject markup. */
+  function _esc(/** @type {unknown} */ s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   /**
    * @param {{onVote: (p: {entry_id: string}) => void, onPicked: (id: string) => void}} cfg
    */
@@ -50,7 +55,7 @@ const MatchupPicker = (() => {
     div.innerHTML = `
       <div style="border:1px solid var(--green);padding:0.6rem;background:rgba(74,122,42,0.07);text-align:center;">
         <div style="font-family:'Cinzel',serif;font-size:1.05rem;padding:0.2rem 0;">
-          ${entry.fighter_a} <span style="color:var(--amber-dim);font-size:0.85rem;">vs</span> ${entry.fighter_b}
+          ${_esc(entry.fighter_a)} <span style="color:var(--amber-dim);font-size:0.85rem;">vs</span> ${_esc(entry.fighter_b)}
         </div>
         <div style="font-size:0.72rem;color:var(--green);">${isPicked ? '✓ you confirmed' : ''} · ${entry.voter_ids.length} vote${entry.voter_ids.length===1?'':'s'}</div>
       </div>
@@ -81,7 +86,7 @@ const MatchupPicker = (() => {
       const isPicked = pickedEntryId === entry.id;
       row.style.cssText = `border:1px solid ${isPicked ? 'var(--green)' : 'var(--body-faint)'};padding:0.3rem;margin-bottom:0.3rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${isPicked ? 'rgba(74,122,42,0.08)' : 'transparent'};`;
       row.innerHTML = `
-        <span style="font-size:0.85rem;">${entry.fighter_a} vs ${entry.fighter_b}</span>
+        <span style="font-size:0.85rem;">${_esc(entry.fighter_a)} vs ${_esc(entry.fighter_b)}</span>
         <span style="font-size:0.72rem;color:${isPicked ? 'var(--green)' : 'var(--body-dim)'};">${entry.voter_ids.length} vote${entry.voter_ids.length===1?'':'s'}${isPicked ? ' ✓' : ''}</span>
       `;
       row.addEventListener('click', () => _onVote({ entry_id: entry.id }));
