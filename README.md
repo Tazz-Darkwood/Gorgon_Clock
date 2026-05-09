@@ -12,7 +12,7 @@ optimal bet size given your bankroll.
 
 ## Architecture
 
-- Static frontend on GitHub Pages (vanilla JS, no bundler, no framework)
+- Static frontend on Render (vanilla JS, no bundler, no framework)
 - Cloudflare Worker + KV for shared matchup/tip state across the player community
 - Browser data (bankroll, voted choices, history) lives in localStorage only
 
@@ -40,12 +40,73 @@ MIT — see `LICENSE`.
 
 ## Deployment
 
-Static site: GitHub Pages, source = `main` / `/public`.
+### Static site (Render)
 
-Worker (one-time setup):
+Render auto-deploys from `main` whenever it changes. The Render service is configured
+once via its dashboard (publish directory: `public/`); no code config lives in this repo.
+Live at https://darkwood-clock.onrender.com/.
 
-1. Create a Cloudflare KV namespace, paste its ID into `worker/wrangler.toml`.
-2. `cd worker && npx wrangler deploy`
-3. If your Worker URL isn't `gorgon-arena.workers.dev`, update the hardcoded
-   references in `public/arena.html` (CSP `connect-src`), `public/index.html`
-   (CSP + arena panel `API_BASE`), and `public/js/api.js` (`_base()`).
+### Worker (Cloudflare)
+
+The Worker is deployed manually from a terminal. **Do this any time you change anything
+under `worker/src/`** — Render does not deploy the Worker, only the static site.
+
+**Step 1.** Pull latest main:
+
+```bash
+git checkout main
+git pull
+```
+
+**Step 2.** Step into the worker directory. ⚠️ This matters: running `wrangler deploy`
+from the repo root deploys the wrong thing.
+
+```bash
+cd worker
+```
+
+**Step 3.** Install deps (only needed the first time, or when `package.json` changes):
+
+```bash
+npm install
+```
+
+**Step 4.** Deploy:
+
+```bash
+npx wrangler deploy
+```
+
+The first time you do this, wrangler opens a browser tab to log into Cloudflare —
+approve it. Afterward, the last few lines of output print the live Worker URL,
+which should be:
+
+```
+https://orgon--lock.steven-bayiates.workers.dev
+```
+
+**Step 5.** Smoke-test by opening that URL with `/v1/health` appended. You should
+see `{"ok":true,"ts":"..."}`. Then load https://darkwood-clock.onrender.com/arena.html
+and confirm the red "Can't reach shared state" banner is NOT showing.
+
+### One-time setup (already done)
+
+For future maintainers spinning up a fresh deployment:
+
+1. Create three Cloudflare KV namespaces in the dashboard: `STATE`, `STATE_PREVIEW`, `STATE_TEST`.
+2. Paste the three IDs into `worker/wrangler.toml`.
+3. The Worker name in `wrangler.toml` (`orgon--lock`) determines the workers.dev subdomain.
+   If you change it, update the hardcoded URL in three places: CSP `connect-src` in
+   `public/arena.html` and `public/index.html`, plus the production branch of `_base()`
+   in `public/js/api.js` and `API_BASE` in the inline script of `public/index.html`.
+4. The CORS allowlist `ALLOWED_ORIGINS` in `worker/wrangler.toml` lists which static-site
+   origins the Worker accepts requests from. If you move the static site, update it.
+
+### Common deploy mistakes
+
+- **`wrangler deploy` from the repo root.** Wrangler picks up the closest config; running
+  from the root means it ignores `worker/wrangler.toml`. Always `cd worker` first.
+- **The deployed URL doesn't match the hardcoded one.** If Cloudflare prints a different
+  URL than `orgon--lock.steven-bayiates.workers.dev` (e.g., a different account
+  subdomain), the browser code can't reach it. Fix by updating the four references in
+  the previous section, or rename the Worker via `wrangler.toml` to match.
