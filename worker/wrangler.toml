@@ -1,6 +1,7 @@
-# Underscore in name renders as "--" in the workers.dev subdomain, so this deploys
-# to https://orgon--lock.<account>.workers.dev — matches the URL the browser uses.
-name = "orgon_lock"
+# Name matches the Worker that's already deployed under this account, so
+# `wrangler deploy` from this directory overwrites it at the same URL:
+# https://orgon--lock.<account>.workers.dev
+name = "orgon--lock"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 compatibility_flags = ["nodejs_compat"]
