@@ -5,8 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "STATE"
-id = "PLACEHOLDER_REPLACE_WITH_REAL_KV_ID"
-preview_id = "PLACEHOLDER_REPLACE_WITH_REAL_PREVIEW_ID"
+id = "37026850aa50421f91f4eba5faf1c177"
+preview_id = "e20ec2d94e3d4113b595abbc4f3c80b3"
 
 [vars]
 ALLOWED_ORIGINS = "http://localhost:8000,https://spearw.github.io"
@@ -15,7 +15,7 @@ KNOWN_TIP_NPCS  = "Mandibles,Qatik,Irkima,Eveline_Rastin,Arianna_Fangblade"
 
 [[env.test.kv_namespaces]]
 binding = "STATE"
-id = "PLACEHOLDER_TEST_KV_ID"
+id = "19e52b9dc8b44c8bbd9dd58506002280"
 
 [env.test.vars]
 ALLOWED_ORIGINS = "http://localhost"

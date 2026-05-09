@@ -16,7 +16,7 @@ const Api = (() => {
     return w.GORGON_API_BASE || (
       window.location.hostname === 'localhost'
         ? 'http://localhost:8787'
-        : 'https://gorgon-arena.workers.dev'
+        : 'https://orgon--lock.steven-bayiates.workers.dev'
     );
   }
 
