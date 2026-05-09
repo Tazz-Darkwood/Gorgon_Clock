@@ -63,15 +63,18 @@ describe('isValidTipNpcId', () => {
 });
 
 describe('isValidModifier', () => {
-  it('accepts integer in [-50, 50]', () => {
-    expect(isValidModifier(0)).toBe(true);
-    expect(isValidModifier(50)).toBe(true);
-    expect(isValidModifier(-50)).toBe(true);
-    expect(isValidModifier(10)).toBe(true);
+  it('accepts the fixed ±5/±10/±15/±20 allowlist', () => {
+    for (const m of [5, 10, 15, 20, -5, -10, -15, -20]) {
+      expect(isValidModifier(m)).toBe(true);
+    }
   });
-  it('rejects out of range', () => {
-    expect(isValidModifier(51)).toBe(false);
-    expect(isValidModifier(-51)).toBe(false);
+  it('rejects values outside the allowlist (even if previously in [-50, 50])', () => {
+    expect(isValidModifier(0)).toBe(false);
+    expect(isValidModifier(7)).toBe(false);
+    expect(isValidModifier(25)).toBe(false);
+    expect(isValidModifier(50)).toBe(false);
+    expect(isValidModifier(-1)).toBe(false);
+    expect(isValidModifier(-50)).toBe(false);
   });
   it('rejects non-integer', () => {
     expect(isValidModifier(0.5)).toBe(false);

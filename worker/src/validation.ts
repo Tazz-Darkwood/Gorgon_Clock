@@ -26,8 +26,12 @@ export function isValidTipNpcId(v: unknown, knownNpcs: string[]): v is string {
   return typeof v === 'string' && knownNpcs.includes(v);
 }
 
+// Wiki tips always come in 5% multiples; observed cap is ±15%, with ±20% as headroom.
+// Narrowing the server-side allowlist to match the UI prevents arbitrary-but-in-range
+// numeric values from poisoning the aggregator.
+const ALLOWED_MODIFIERS = new Set([5, 10, 15, 20, -5, -10, -15, -20]);
 export function isValidModifier(v: unknown): v is number {
-  return typeof v === 'number' && Number.isInteger(v) && v >= -50 && v <= 50;
+  return typeof v === 'number' && Number.isInteger(v) && ALLOWED_MODIFIERS.has(v);
 }
 
 export function isValidTipType(v: unknown): v is 'matchup' | 'fighter' {

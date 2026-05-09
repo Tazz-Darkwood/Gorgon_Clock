@@ -15,10 +15,20 @@ export function slotIdAt(d: Date): string {
 export function startsAtUtc(slotId: string): Date {
   const m = /^(\d{4})-(\d{2})-(\d{2})-(\d{1,3})$/.exec(slotId);
   if (!m) throw new Error('Invalid slot id: ' + slotId);
+  const year = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  const day = parseInt(m[3], 10);
   const slot = parseInt(m[4], 10);
   if (slot < 0 || slot >= SLOTS_PER_DAY) throw new Error('Slot out of range');
-  const startOfDay = Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10))
-                     - EST_OFFSET_HOURS * 3600 * 1000;
+  // Date.UTC silently normalizes invalid combos (e.g. 2026-13-99 → 2027-04-08).
+  // Round-trip through Date to reject anything that doesn't match the input.
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  if (probe.getUTCFullYear() !== year
+      || probe.getUTCMonth() !== month - 1
+      || probe.getUTCDate() !== day) {
+    throw new Error('Invalid calendar date in slot id: ' + slotId);
+  }
+  const startOfDay = Date.UTC(year, month - 1, day) - EST_OFFSET_HOURS * 3600 * 1000;
   return new Date(startOfDay + slot * SLOT_MS);
 }
 
