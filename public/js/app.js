@@ -138,7 +138,7 @@
 
   // 8-min slot in ms; we count down to the *next* slot's start, not the current slot's
   // (Schedule.startsAtUtc returns the current slot's start which is always in the past).
-  const SLOT_MS_LOCAL = 8 * 60 * 1000;
+  const SLOT_MS_LOCAL = 10 * 60 * 1000;
 
   function tickCountdown() {
     const now = new Date();
@@ -149,7 +149,7 @@
     const m = Math.floor(remaining / 60000);
     const s = Math.floor((remaining % 60000) / 1000);
     if (cdValue) cdValue.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    if (cdMeta) cdMeta.textContent = `slot #${slotId.slice(-3)} · next start ${nextStart.toUTCString().slice(17,22)} UTC · 8m window`;
+    if (cdMeta) cdMeta.textContent = `slot #${slotId.slice(-3)} · next start ${nextStart.toUTCString().slice(17,22)} UTC · 10m window`;
   }
 
   function renderAll() {
