@@ -11,7 +11,6 @@ const Schedule = (() => {
   const EST_OFFSET_HOURS = -5;
   const SLOT_MS = 10 * 60 * 1000;
   const SLOTS_PER_DAY = 144;
-  const SLOT_OFFSET_MS = -1 * 60 * 1000; // 1 minute offset
 
   /**
    * Convert a UTC Date to {date, slot} aligned to EST midnight.
@@ -29,7 +28,6 @@ const Schedule = (() => {
     const yyyy = String(y).padStart(4, '0');
     const mm = String(m).padStart(2, '0');
     const dd = String(day).padStart(2, '0');
-    const msSinceMidnight = shifted.getTime() - startOfDay - SLOT_OFFSET_MS;
     return { date: `${yyyy}-${mm}-${dd}`, slot };
   }
 
@@ -57,7 +55,7 @@ const Schedule = (() => {
       parseInt(mm, 10) - 1,
       parseInt(dd, 10)
     ) - EST_OFFSET_HOURS * 3600 * 1000;
-    return new Date(startOfDayUtc + slot * SLOT_MS + SLOT_OFFSET_MS);
+    return new Date(startOfDayUtc + slot * SLOT_MS);
   }
 
   /**
