@@ -125,6 +125,14 @@ export async function patchTip(
   const tip = state.tips.find(t => t.id === tipId);
   if (!tip) throw new Error('Tip not found');
 
+  // The submitter "removing" their own tip means retracting it for everyone,
+  // not just hiding it from their own view. Drop the tip entirely.
+  if (body.action === 'remove' && tip.submitted_by === body.user_id) {
+    state.tips = state.tips.filter(t => t.id !== tipId);
+    await saveTips(kv, state);
+    return state;
+  }
+
   tip.upvoters = tip.upvoters.filter(u => u !== body.user_id);
   tip.removers = tip.removers.filter(u => u !== body.user_id);
   if (body.action === 'upvote') tip.upvoters.push(body.user_id);

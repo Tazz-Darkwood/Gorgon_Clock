@@ -60,6 +60,12 @@ function removeUserFromAllEntries(slot: SlotState, userId: string) {
   }
 }
 
+// An entry with no voters is a phantom matchup nobody is endorsing.
+// Drop it so other players don't see it.
+function pruneEmptyEntries(slot: SlotState) {
+  slot.entries = slot.entries.filter(e => e.voter_ids.length > 0);
+}
+
 export async function createOrVote(
   kv: KVNamespace,
   slotId: string,
@@ -84,6 +90,7 @@ export async function createOrVote(
     // for the same unordered pair.
     const [a, b] = [body.fighter_a, body.fighter_b].sort();
     removeUserFromAllEntries(slot, body.user_id);
+    pruneEmptyEntries(slot);
     const existing = slot.entries.find(e => e.fighter_a === a && e.fighter_b === b);
     if (existing) {
       existing.voter_ids.push(body.user_id);
@@ -104,6 +111,7 @@ export async function createOrVote(
   if (!target) throw new Error('entry_id not found');
   removeUserFromAllEntries(slot, body.user_id);
   target.voter_ids.push(body.user_id);
+  pruneEmptyEntries(slot);
   await saveSlot(kv, slot);
   return slot;
 }
@@ -117,6 +125,7 @@ export async function removeVote(
   if (!isValidUserId(userId)) throw new Error('Invalid user id');
   const slot = await getSlot(kv, slotId);
   removeUserFromAllEntries(slot, userId);
+  pruneEmptyEntries(slot);
   await saveSlot(kv, slot);
   return slot;
 }
