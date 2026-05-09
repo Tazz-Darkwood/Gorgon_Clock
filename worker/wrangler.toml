@@ -1,4 +1,7 @@
-name = "gorgon-arena"
+# Name matches the Worker that's already deployed under this account, so
+# `wrangler deploy` from this directory overwrites it at the same URL:
+# https://orgon--lock.<account>.workers.dev
+name = "orgon--lock"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 compatibility_flags = ["nodejs_compat"]
@@ -9,7 +12,7 @@ id = "37026850aa50421f91f4eba5faf1c177"
 preview_id = "e20ec2d94e3d4113b595abbc4f3c80b3"
 
 [vars]
-ALLOWED_ORIGINS = "http://localhost:8000, https://spearw.github.io, https://Tazz-Darkwood.github.io"
+ALLOWED_ORIGINS = "http://localhost:8000,https://darkwood-clock.onrender.com"
 KNOWN_FIGHTERS  = "Corrrak,Dura,Gloz,Leo,Otis,Ushug,Vizlark"
 KNOWN_TIP_NPCS  = "Mandibles,Qatik,Irkima,Eveline_Rastin,Arianna_Fangblade"
 
