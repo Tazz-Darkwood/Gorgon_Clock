@@ -1,6 +1,9 @@
 const EST_OFFSET_HOURS = -5;
-const SLOT_MS = 8 * 60 * 1000;
-const SLOTS_PER_DAY = 180;
+// 10-minute fight cadence, 144 slots per 24h day. Browser (public/js/schedule.js)
+// MUST stay in sync — if these diverge, the Worker rejects the browser's slot IDs
+// as "Slot out of range" because they map to different time windows on each side.
+const SLOT_MS = 10 * 60 * 1000;
+const SLOTS_PER_DAY = 144;
 
 export function slotIdAt(d: Date): string {
   const shifted = new Date(d.getTime() + EST_OFFSET_HOURS * 3600 * 1000);

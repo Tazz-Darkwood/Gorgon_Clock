@@ -136,15 +136,13 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // 8-min slot in ms; we count down to the *next* slot's start, not the current slot's
+  // We count down to the *next* slot's start, not the current slot's
   // (Schedule.startsAtUtc returns the current slot's start which is always in the past).
-  const SLOT_MS_LOCAL = 10 * 60 * 1000;
-
   function tickCountdown() {
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
     const currentStart = Schedule.startsAtUtc(slotId);
-    const nextStart = new Date(currentStart.getTime() + SLOT_MS_LOCAL);
+    const nextStart = new Date(currentStart.getTime() + Schedule.SLOT_MS);
     const remaining = Math.max(0, nextStart.getTime() - now.getTime());
     const m = Math.floor(remaining / 60000);
     const s = Math.floor((remaining % 60000) / 1000);
@@ -249,7 +247,7 @@
     tickCountdown();
     const now = new Date();
     const slotId = Schedule.slotIdAt(now);
-    const msToNext = (Schedule.startsAtUtc(slotId).getTime() + SLOT_MS_LOCAL) - now.getTime();
+    const msToNext = (Schedule.startsAtUtc(slotId).getTime() + Schedule.SLOT_MS) - now.getTime();
     const interval = (msToNext > 0 && msToNext < 60_000) ? 10_000 : 30_000;
     if (now.getTime() - lastPollAt > interval) {
       lastPollAt = now.getTime();
