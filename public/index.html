@@ -1834,9 +1834,11 @@ tickCountdowns();
   const matchupEl = document.getElementById('arena-matchup-text');
   if (!cdEl) return;
 
-  // Schedule helpers (inline duplicate to avoid loading the full schedule.js here)
+  // Schedule helpers (inline duplicate to avoid loading the full schedule.js here).
+  // SLOT_MS must match public/js/schedule.js and worker/src/schedule.ts — see those
+  // files for the single source of truth.
   const EST_OFFSET_HOURS = -5;
-  const SLOT_MS = 8 * 60 * 1000;
+  const SLOT_MS = 10 * 60 * 1000;
   function slotIdAt(d) {
     const shifted = new Date(d.getTime() + EST_OFFSET_HOURS * 3600 * 1000);
     const y = shifted.getUTCFullYear();
